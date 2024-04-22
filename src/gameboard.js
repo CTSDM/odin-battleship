@@ -1,17 +1,16 @@
 import Ship from './ships'
 
-const BOARD_SIZE = 20;
 export default class Gameboard {
-    constructor() {
-        this.size = BOARD_SIZE;
-        this.map = this.initializeArr(BOARD_SIZE);
-        this.positionsVisited = this.initializeArr(BOARD_SIZE);
+    constructor(boardSize) {
+        this.size = boardSize;
+        this.map = this.initializeArr(boardSize);
+        this.positionsVisited = this.initializeArr(boardSize);
     }
 
-    initializeArr(BOARD_SIZE) {
+    initializeArr(boardSize) {
         const arr = [];
-        for (let i = 0; i < BOARD_SIZE; ++i)
-            arr.push(new Array(BOARD_SIZE));
+        for (let i = 0; i < boardSize; ++i)
+            arr.push(new Array(boardSize));
         return arr;
     }
 
