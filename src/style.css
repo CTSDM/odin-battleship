@@ -1,0 +1,43 @@
+body,
+html {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: lightgrey;
+}
+
+.players-container {
+    display: grid;
+    grid-template-columns: 1fr 50px 1fr;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(20, 1fr);
+    aspect-ratio: 1;
+}
+
+.cell {
+    width: 20px;
+    aspect-ratio: 1;
+    border: 3px solid black;
+}
+
+.player1 {
+    background: blue;
+}
+
+.player2 {
+    background: red;
+}
+
+.hit {
+    background-color: yellow;
+}
+
+.no-hit {
+    background-color: white;
+}
