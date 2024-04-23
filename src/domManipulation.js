@@ -33,56 +33,69 @@ function createPlayers(size) {
 
 function createEvents(playersArr, flagComputer, size) {
     // We associate each player with a board;
+    // the function inside the event listener should not be an anonymous function
     const divBoards = document.querySelectorAll('div.board');
     let turn = 0;
     divBoards.forEach((divBoard, index) => {
         if (flagComputer === false || !index) {
-            divBoard.addEventListener('click', (e) => {
-                if (e.target.dataset.row !== undefined) {
-                    const row = e.target.dataset.row;
-                    const column = e.target.dataset.column;
-                    if (playersArr[index].gameboard.positionsVisited[row][column] === undefined && turn === index) {
-                        turn = (turn === 0) ? 1 : 0;
-                        playersArr[index].gameboard.receiveAttack([row, column]);
-                        if (playersArr[index].gameboard.positionsVisited[row][column] === true)
-                            e.target.classList.add('hit');
-                        else
-                            e.target.classList.add('no-hit');
-                    }
-                }
-                if (flagComputer === true && turn === 1) {
-                    while (true) {
-                        const coords = computerPlays(playersArr[1].gameboard.map.length);
-                        const row = coords[0], column = coords[1];
-                        if (playersArr[1].gameboard.positionsVisited[row][column] === undefined) {
-                            const cell = divBoards[1].children[row * size + column];
-                            turn = (turn === 0) ? 1 : 0;
-                            playersArr[1].gameboard.receiveAttack(coords);
-                            if (playersArr[1].gameboard.positionsVisited[row][column] === true) {
-                                cell.classList.add('hit');
-                            }
-                            else
-                                cell.classList.add('no-hit');
-                        } else
-                            continue;
-                        break;
-                    }
-                }
-                if (playersArr[index].gameboard.areShipsLeft() === false) {
-                    console.log('end game');
-                    // load logic for end game
-                    // we should be able to disable all the event listeners...
-                }
-            });
+            divBoard.addEventListener('click', assignEventListener);
         }
     });
+
+    function assignEventListener(event) {
+        if (event.target.dataset.row !== undefined) {
+            const row = event.target.dataset.row;
+            const column = event.target.dataset.column;
+            if (registerHit(playersArr, turn, row, column, event.target)) {
+                turn = (turn === 0) ? 1 : 0;
+                if (playersArr[turn ? 0 : 1].gameboard.areShipsLeft() === false) {
+                    disableEventListeners();
+                    return;
+                }
+            }
+        }
+        if (flagComputer === true && turn === 1) {
+            while (true) {
+                const coords = computerPlays(playersArr[1].gameboard.map.length);
+                const row = coords[0], column = coords[1];
+                const cell = divBoards[1].children[row * size + column];
+                if (registerHit(playersArr, turn, row, column, cell))
+                    turn = (turn === 0 ? 1 : 0);
+                else
+                    continue;
+                break;
+            }
+            if (playersArr[turn ? 0 : 1].gameboard.areShipsLeft() === false) {
+                disableEventListeners();
+            }
+        }
+    }
+
+    function disableEventListeners() {
+        const divBoards = document.querySelectorAll('div.board');
+        divBoards.forEach((divBoard) => {
+            divBoard.removeEventListener('click', assignEventListener);
+        });
+    }
+}
+
+
+function registerHit(playersArr, turn, row, column, cell) {
+    if (playersArr[turn].gameboard.positionsVisited[row][column] === undefined) {
+        playersArr[turn].gameboard.receiveAttack([row, column]);
+        if (playersArr[turn].gameboard.positionsVisited[row][column] === true)
+            cell.classList.add('hit');
+        else
+            cell.classList.add('no-hit');
+        return true;
+    } else
+        return false;
 }
 
 function computerPlays(size) {
     // it just return some random coordinates
     const x = Math.floor(Math.random() * size);
     const y = Math.floor(Math.random() * size);
-
     return [x, y];
 }
 
