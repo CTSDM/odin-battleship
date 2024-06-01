@@ -50,6 +50,7 @@ function createEvents(playersArr, flagComputer, size) {
                 turn = (turn === 0) ? 1 : 0;
                 if (playersArr[turn ? 0 : 1].gameboard.areShipsLeft() === false) {
                     disableEventListeners();
+                    endGame();
                     return;
                 }
             }
@@ -67,6 +68,7 @@ function createEvents(playersArr, flagComputer, size) {
             }
             if (playersArr[turn ? 0 : 1].gameboard.areShipsLeft() === false) {
                 disableEventListeners();
+                endGame(turn);
             }
         }
     }
@@ -79,6 +81,10 @@ function createEvents(playersArr, flagComputer, size) {
     }
 }
 
+function endGame(turn) {
+    console.log('end game!');
+    console.log(`player ${turn ? 0 : 1} won!`);
+}
 
 function registerHit(playersArr, turn, row, column, cell) {
     if (playersArr[turn].gameboard.positionsVisited[row][column] === undefined) {
