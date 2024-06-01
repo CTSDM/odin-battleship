@@ -36,11 +36,9 @@ function createEvents(playersArr, flagComputer, size) {
     // the function inside the event listener should not be an anonymous function
     const divBoards = document.querySelectorAll('div.board');
     let turn = 0;
-    divBoards.forEach((divBoard, index) => {
-        if (flagComputer === false || !index) {
-            divBoard.addEventListener('click', assignEventListener);
-        }
-    });
+    divBoards[1].addEventListener('click', assignEventListener);
+    if (flagComputer === false)
+        divBoards[0].addEventListener('click', assignEventListener);
 
     function assignEventListener(event) {
         if (event.target.dataset.row !== undefined) {
@@ -59,7 +57,7 @@ function createEvents(playersArr, flagComputer, size) {
             while (true) {
                 const coords = computerPlays(playersArr[1].gameboard.map.length);
                 const row = coords[0], column = coords[1];
-                const cell = divBoards[1].children[row * size + column];
+                const cell = divBoards[0].children[row * size + column];
                 if (registerHit(playersArr, turn, row, column, cell))
                     turn = (turn === 0 ? 1 : 0);
                 else
@@ -110,6 +108,8 @@ function placeShips(playersArr, nShips, size) {
     for (let i = 0; i < 2; ++i) {
         coordinatesShipsArr = getRandomCoordinates(nShips, size);
         coordinatesShipsArr.forEach((coordinates) => {
+            console.log('printingCoordinates');
+            console.log(coordinates);
             playersArr[i].gameboard.addShip(coordinates);
         });
     }
