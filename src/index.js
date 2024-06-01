@@ -1,5 +1,5 @@
 import './style.css'
 import startGame from './domManipulation'
-const GAMEBOARD_SIZE = 20;
-
-startGame(GAMEBOARD_SIZE);
+const GAMEBOARD_SIZE = 10;
+const NUMBER_OF_CHIPS = 4;
+startGame(GAMEBOARD_SIZE, NUMBER_OF_CHIPS);

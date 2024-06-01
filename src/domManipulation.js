@@ -1,11 +1,11 @@
 import Player from './player'
 
-export default function startGame(size) {
+export default function startGame(size, numberOfShips) {
     loadGrid(size);
     const playersArr = createPlayers(size);
     let isComputerPlaying = true;
     createEvents(playersArr, isComputerPlaying, size);
-    placeShips(playersArr);
+    placeShips(playersArr, numberOfShips, size);
 }
 
 function loadGrid(size) {
@@ -105,20 +105,54 @@ function computerPlays(size) {
     return [x, y];
 }
 
-function placeShips(playersArr) {
-    const coordinatesShipsArr = getFixedCoordinates();
-    coordinatesShipsArr.forEach((coordinates) => {
-        playersArr[0].gameboard.addShip(coordinates);
-        playersArr[1].gameboard.addShip(coordinates);
-    });
+function placeShips(playersArr, nShips, size) {
+    let coordinatesShipsArr;
+    for (let i = 0; i < 2; ++i) {
+        coordinatesShipsArr = getRandomCoordinates(nShips, size);
+        coordinatesShipsArr.forEach((coordinates) => {
+            playersArr[i].gameboard.addShip(coordinates);
+        });
+    }
     console.log(playersArr[0].gameboard.map);
     console.log(playersArr[1].gameboard.map);
 }
 
+function getRandomCoordinates(nShips, size) {
+    // Returns a matrix of nShips with different lengths that are not overlapping
+    const ship = [];
+    for (let i = 0; i < nShips; ++i) {
+        ship.push([]);
+    }
+    for (let i = 0; i < nShips; ++i) {
+        for (let j = 0; j < 2 + i; ++j) {
+            ship[i].push([0, 0]);
+        }
+    }
+    // The first length is 2 and then increases by 1
+    // The ships are placed vertically
+    for (let i = 0; i < nShips; ++i) {
+        let isShipValid = false;
+        while (!isShipValid) {
+            let x, y;
+            x = Math.floor(Math.random() * size);
+            y = Math.floor(Math.random() * size);
+            if (i > 0) {
+                // We check if there are overlapping
+                for (let k = 0; i < k; ++k) {
+                    if (y === ship[k][0][1])
+                        continue
+                }
+            }
 
-function getFixedCoordinates() {
-    // this function is used to get fixed coordinates to place the ship;
-    const ship1 = [[0, 0], [0, 1]];
-    const ship2 = [[1, 1], [1, 2], [1, 3], [1, 4], [1, 5]];
-    return [ship1, ship2];
+            if (x + i + 2 > 9)
+                continue
+
+            ship[i].forEach((position, idx) => {
+                position[0] = x + idx;
+                position[1] = y;
+            })
+            isShipValid = true;
+        }
+    }
+    return ship;
 }
