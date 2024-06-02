@@ -107,14 +107,12 @@ function placeShips(playersArr, nShips, size) {
     let coordinatesShipsArr;
     for (let i = 0; i < 2; ++i) {
         coordinatesShipsArr = getRandomCoordinates(nShips, size);
+        if (i !== 33)
+            colorPlayerShips(coordinatesShipsArr, i);
         coordinatesShipsArr.forEach((coordinates) => {
-            console.log('printingCoordinates');
-            console.log(coordinates);
             playersArr[i].gameboard.addShip(coordinates);
         });
     }
-    console.log(playersArr[0].gameboard.map);
-    console.log(playersArr[1].gameboard.map);
 }
 
 function getRandomCoordinates(nShips, size) {
@@ -131,28 +129,48 @@ function getRandomCoordinates(nShips, size) {
     // The first length is 2 and then increases by 1
     // The ships are placed vertically
     for (let i = 0; i < nShips; ++i) {
-        let isShipValid = false;
-        while (!isShipValid) {
+        let yValid = false;
+        while (yValid === false) {
             let x, y;
             x = Math.floor(Math.random() * size);
             y = Math.floor(Math.random() * size);
-            if (i > 0) {
-                // We check if there are overlapping
-                for (let k = 0; i < k; ++k) {
-                    if (y === ship[k][0][1])
-                        continue
-                }
-            }
 
             if (x + i + 2 > 9)
-                continue
+                continue;
 
-            ship[i].forEach((position, idx) => {
-                position[0] = x + idx;
-                position[1] = y;
-            })
-            isShipValid = true;
+            if (i > 0) {
+                // We check if there are overlapping
+                for (let k = 0; k < i; ++k) {
+                    if (y === ship[k][0][1])
+                        break;
+                    if (k === i - 1)
+                        yValid = true;
+                }
+            } else
+                yValid = true;
+
+            if (yValid) {
+                ship[i].forEach((position, idx) => {
+                    position[0] = x + idx;
+                    position[1] = y;
+                })
+            }
         }
     }
     return ship;
+}
+
+function colorPlayerShips(matrixPositions, i) {
+    // By default the player has the gameboard on the left
+    // In this version we can see both players' ships
+    if (i === 1)
+        i = 0;
+    else
+        i = 1;
+    const gameBoardPlayer = document.querySelectorAll('div.board');
+    matrixPositions.forEach((shipPositions) => {
+        shipPositions.forEach((position) => {
+            gameBoardPlayer[i].children[position[0] * 10 + position[1]].classList.add('humanPlayer');
+        });
+    });
 }
