@@ -51,3 +51,9 @@ body {
 .humanPlayer {
     border-color: green;
 }
+
+.ship-selection {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}

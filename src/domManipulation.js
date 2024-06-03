@@ -1,17 +1,32 @@
 import Player from './player'
 
-export default function startGame(size, numberOfShips) {
+// the game now is not working when placing randomly the positions...!
+
+export default function createBoard(size, numberOfShips) {
+    // we load the grid
+    // we obtain the ship positions
+    // we draw it on the board
+    // do a mockup!
+    // don't launch the events until the game really starts!
     loadGrid(size);
-    const playersArr = createPlayers(size);
+    const playersArr = [];
+    createPlayers(playersArr, size);
     let isComputerPlaying = true;
-    createEvents(playersArr, isComputerPlaying, size);
+    const restartPositionButton = document.getElementById('randomize-placement');
+    restartPositionButton.addEventListener('click', () => {
+        loadGrid(size);
+        createPlayers(playersArr, size);
+        placeShips(playersArr, numberOfShips, size);
+    });
     placeShips(playersArr, numberOfShips, size);
+    startGame(playersArr, isComputerPlaying, size);
 }
 
 function loadGrid(size) {
     console.log('doing something...');
     const divBoards = document.querySelectorAll('div.board');
     divBoards.forEach((divBoard) => {
+        divBoard.textContent = '';
         for (let row = 0; row < size; ++row) {
             for (let column = 0; column < size; ++column) {
                 const div = document.createElement('div');
@@ -24,13 +39,22 @@ function loadGrid(size) {
     });
 }
 
-function createPlayers(size) {
+function createPlayers(players, size) {
+    players.splice(0, players.length);
     const playerOne = new Player(size);
     const playerTwo = new Player(size);
-    return [playerOne, playerTwo];
-
+    players.push(playerOne);
+    players.push(playerTwo);
 }
 
+function startGame(players, computer, size) {
+    createEvents(players, computer, size);
+    const startGameButton = document.getElementById('start-game');
+    startGameButton.addEventListener('click', () => {
+        const divShipPlacement = document.querySelector('.ship-selection');
+        divShipPlacement.remove();
+    });
+}
 function createEvents(playersArr, flagComputer, size) {
     // We associate each player with a board;
     // the function inside the event listener should not be an anonymous function
@@ -65,6 +89,7 @@ function createEvents(playersArr, flagComputer, size) {
                 break;
             }
             if (playersArr[turn ? 0 : 1].gameboard.areShipsLeft() === false) {
+
                 disableEventListeners();
                 endGame(turn);
             }
@@ -106,16 +131,14 @@ function computerPlays(size) {
 function placeShips(playersArr, nShips, size) {
     let coordinatesShipsArr;
     for (let i = 0; i < 2; ++i) {
-        coordinatesShipsArr = getRandomCoordinates(nShips, size);
-        if (i !== 33)
-            colorPlayerShips(coordinatesShipsArr, i);
+        coordinatesShipsArr = getRandomCoordinates(nShips, size, i);
         coordinatesShipsArr.forEach((coordinates) => {
             playersArr[i].gameboard.addShip(coordinates);
         });
     }
 }
 
-function getRandomCoordinates(nShips, size) {
+function getRandomCoordinates(nShips, size, shipIndex) {
     // Returns a matrix of nShips with different lengths that are not overlapping
     const ship = [];
     for (let i = 0; i < nShips; ++i) {
@@ -157,6 +180,7 @@ function getRandomCoordinates(nShips, size) {
             }
         }
     }
+    colorPlayerShips(ship, shipIndex);
     return ship;
 }
 
