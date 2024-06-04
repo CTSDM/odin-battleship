@@ -57,3 +57,8 @@ body {
     justify-content: center;
     gap: 20px;
 }
+
+.ships-images {
+    display: flex;
+    gap: 20px;
+}

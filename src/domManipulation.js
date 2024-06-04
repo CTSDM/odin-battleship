@@ -1,3 +1,7 @@
+import imageShip1 from "./images/smallShip.png";
+import imageShip2 from "./images/smallShip2.png";
+
+const IMAGES_SHIPS = [imageShip1, imageShip2];
 import Player from './player'
 
 // the game now is not working when placing randomly the positions...!
@@ -9,6 +13,7 @@ export default function createBoard(size, numberOfShips) {
     // do a mockup!
     // don't launch the events until the game really starts!
     loadGrid(size);
+    attachImages();
     const playersArr = [];
     createPlayers(playersArr, size);
     let isComputerPlaying = true;
@@ -23,7 +28,6 @@ export default function createBoard(size, numberOfShips) {
 }
 
 function loadGrid(size) {
-    console.log('doing something...');
     const divBoards = document.querySelectorAll('div.board');
     divBoards.forEach((divBoard) => {
         divBoard.textContent = '';
@@ -196,5 +200,44 @@ function colorPlayerShips(matrixPositions, i) {
         shipPositions.forEach((position) => {
             gameBoardPlayer[i].children[position[0] * 10 + position[1]].classList.add('humanPlayer');
         });
+    });
+}
+
+// let's create a drag and drop for the ship placement!
+// let's start with one ship!
+// add an event listener to the ship
+
+function attachImages() {
+    let activation = false;
+    let indexShip = -1;
+    const initialClickPosition = [];
+    const shipContainer = [...document.querySelector('.ships-images').children];
+    [...shipContainer].forEach((image, index) => {
+        image.src = IMAGES_SHIPS[index];
+        const width = 150 * (index + 1);
+        image.style.width = `${width}px`;
+        image.addEventListener('mousedown', (e) => {
+            activation = true;
+            indexShip = index;
+            initialClickPosition[0] = e.clientX;
+            initialClickPosition[1] = e.clientY;
+
+        });
+    });
+    document.addEventListener('mousemove', (e) => {
+        if (activation && indexShip !== -1) {
+            shipContainer[indexShip].style.position = 'relative';
+            shipContainer[indexShip].style.left = `${e.clientX - initialClickPosition[0]}px`;
+            shipContainer[indexShip].style.top = `${e.clientY - initialClickPosition[1]}px`;
+        }
+    });
+    document.addEventListener('mouseup', () => {
+        // we need to check whether the mouseup event happened in a valid board position
+        if (indexShip !== -1) {
+            shipContainer[indexShip].style.position = 'static';
+            shipContainer[indexShip].top = 0;
+            shipContainer[indexShip].left = 0;
+            indexShip = -1;
+        }
     });
 }
