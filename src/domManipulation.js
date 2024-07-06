@@ -216,13 +216,26 @@ function attachImages() {
         image.src = IMAGES_SHIPS[index];
         const width = 150 * (index + 1);
         image.style.width = `${width}px`;
-        image.addEventListener('mousedown', (e) => {
+        image.addEventListener('mousedown', (eMouse) => {
             activation = true;
             indexShip = index;
-            initialClickPosition[0] = e.clientX;
-            initialClickPosition[1] = e.clientY;
-
+            initialClickPosition[0] = eMouse.clientX;
+            initialClickPosition[1] = eMouse.clientY;
         });
+    });
+    // we add rotation if the user press down the keyCode R
+    document.addEventListener('keypress', (eKey) => {
+        if (eKey.code === 'KeyR') {
+            let newRotationValue;
+            if (indexShip !== -1) {
+                const image = [...shipContainer][indexShip];
+                if (image.style.transform !== 'rotate(90deg)')
+                    newRotationValue = 90;
+                else
+                    newRotationValue = 0;
+                image.style.transform = `rotate(${newRotationValue}deg)`;
+            }
+        }
     });
     document.addEventListener('mousemove', (e) => {
         if (activation && indexShip !== -1) {
@@ -237,6 +250,7 @@ function attachImages() {
             shipContainer[indexShip].style.position = 'static';
             shipContainer[indexShip].top = 0;
             shipContainer[indexShip].left = 0;
+            shipContainer[indexShip].style.transform = 'rotate(0deg)';
             indexShip = -1;
         }
     });
