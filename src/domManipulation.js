@@ -216,6 +216,9 @@ function attachImages() {
         image.src = IMAGES_SHIPS[index];
         const width = 150 * (index + 1);
         image.style.width = `${width}px`;
+        // we need to add some initial 0deg rotation to the ships in order to not get an empty string when calling
+        // the attribute style.transform
+        image.style.transform = 'rotate(0deg)';
         image.addEventListener('mousedown', (eMouse) => {
             activation = true;
             indexShip = index;
@@ -244,9 +247,12 @@ function attachImages() {
             shipContainer[indexShip].style.top = `${e.clientY - initialClickPosition[1]}px`;
         }
     });
-    document.addEventListener('mouseup', () => {
-        // we need to check whether the mouseup event happened in a valid board position
+    document.addEventListener('mouseup', (eMouseUp) => {
         if (indexShip !== -1) {
+            if (isValidShipPosition(eMouseUp, shipContainer[indexShip])) {
+                console.log('the ship can be placed');
+            } else
+                console.log('the ship cannot be placed...');
             shipContainer[indexShip].style.position = 'static';
             shipContainer[indexShip].top = 0;
             shipContainer[indexShip].left = 0;
@@ -254,4 +260,28 @@ function attachImages() {
             indexShip = -1;
         }
     });
+}
+
+function isValidShipPosition(ship) {
+    // when there is a mouse up it needs to be checked if a cell is within the coordinates
+    // we have to take into account the size of the selected ship
+    // its rotation too must be taken into account
+    // in this function indexShip is always different from -1
+    const boardPlayer1Coord = document.querySelector('.player1').getBoundingClientRect();
+    const shipCoordinates = ship.getBoundingClientRect();
+    let rotated;
+    if (ship.style.trasnform === 'rotate(90deg)')
+        rotated = true;
+    else
+        rotated = false;
+    if (boardPlayer1Coord.left < shipCoordinates.left && shipCoordinates.left < boardPlayer1Coord.right) {
+        if (boardPlayer1Coord.top < shipCoordinates.top && shipCoordinates.top < boardPlayer1Coord.bottom)
+            if (rotated) {
+                if (shipCoordinates.top + 150 < boardPlayer1Coord.bottom)
+                    return true;
+            } else
+                if (shipCoordinates.left + 150 < boardPlayer1Coord.right)
+                    return true;
+    }
+    return false;
 }

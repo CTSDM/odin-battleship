@@ -18,10 +18,12 @@ body {
     display: grid;
     grid-template-columns: repeat(10, 1fr);
     aspect-ratio: 1;
+    border: 3px solid black;
+    width: 500px;
 }
 
 .cell {
-    width: 20px;
+    width: 44px;
     aspect-ratio: 1;
     border: 3px solid black;
 }
