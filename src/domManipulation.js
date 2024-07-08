@@ -13,18 +13,90 @@ export default function createBoard(size, numberOfShips) {
     // do a mockup!
     // don't launch the events until the game really starts!
     loadGrid(size);
-    attachImages();
     const playersArr = [];
     createPlayers(playersArr, size);
     let isComputerPlaying = true;
+    placeShips(playersArr[1], 0, numberOfShips, size);
+    startGame(playersArr, isComputerPlaying, size);
+    manualPositionStart(size, playersArr);
+    randomPositionStart(size, playersArr, numberOfShips);
+}
+
+function randomPositionStart(size, playersArr, numberOfShips) {
     const restartPositionButton = document.getElementById('randomize-placement');
     restartPositionButton.addEventListener('click', () => {
-        loadGrid(size);
-        createPlayers(playersArr, size);
-        placeShips(playersArr, numberOfShips, size);
+        const divShips = document.querySelector('.ships-images');
+        const manualPositionButton = document.getElementById('manual-placement');
+        restartPlayersGrid(size, playersArr);
+        playersArr.forEach((player, playerIndex) => {
+            placeShips(player, playerIndex, numberOfShips, size);
+        });
+        if (divShips) {
+            divShips.remove();
+        }
+        setUpManualPosition(manualPositionButton, size, playersArr);
     });
-    placeShips(playersArr, numberOfShips, size);
-    startGame(playersArr, isComputerPlaying, size);
+}
+
+function setUpManualPosition(button, size, playersArr) {
+    const manualButton = document.createElement('button');
+    manualButton.id = 'manual-placement';
+    manualButton.textContent = 'Manual placement of the ship';
+    manualButton.type = 'button';
+    manualButton.addEventListener('click', () => {
+        restartPlayersGrid(size, playersArr);
+        createDivShips();
+        attachImages();
+        restartManualShipPlacement(manualButton, size, playersArr);
+        manualButton.remove();
+    });
+    button.insertAdjacentElement('beforebegin', manualButton);
+    button.remove();
+}
+
+function manualPositionStart(size, playersArr) {
+    const manualPositionButton = document.getElementById('manual-placement');
+    manualPositionButton.addEventListener('click', () => {
+        restartPlayersGrid(size, playersArr);
+        createDivShips();
+        // we need to change the text and functionality of the manual ship place button...
+        // for that i think it is better to remove the button and add a new one so the event listener are also removed
+        // so we create a new button and delete the current button...
+        attachImages();
+        restartManualShipPlacement(manualPositionButton, size, playersArr);
+        manualPositionButton.remove();
+    });
+}
+
+function restartManualShipPlacement(manualPositionButton, size, playersArr) {
+    const buttonRestart = document.createElement('button');
+    buttonRestart.textContent = 'Restart manual ship placement';
+    buttonRestart.type = 'button';
+    buttonRestart.id = 'manual-placement';
+    buttonRestart.addEventListener('click', () => {
+        console.log('restarting manual ship placement...');
+        restartPlayersGrid(size, playersArr);
+    });
+    manualPositionButton.insertAdjacentElement('beforebegin', buttonRestart);
+}
+
+function createDivShips() {
+    const divShips = document.createElement('div');
+    divShips.classList.add('ships-images');
+    for (let i = 2; i < 4; ++i) {
+        const img = document.createElement('img');
+        console.log(img);
+        console.log(divShips);
+        img.draggable = false;
+        img.alt = `Ship of length ${i}`;
+        divShips.appendChild(img);
+    }
+    document.body.appendChild(divShips);
+}
+
+function restartPlayersGrid(size, playersArr) {
+    loadGrid(size);
+    createPlayers(playersArr, size);
 }
 
 function loadGrid(size) {
@@ -132,14 +204,12 @@ function computerPlays(size) {
     return [x, y];
 }
 
-function placeShips(playersArr, nShips, size) {
+function placeShips(player, playerIndex, nShips, size) {
     let coordinatesShipsArr;
-    for (let i = 0; i < 2; ++i) {
-        coordinatesShipsArr = getRandomCoordinates(nShips, size, i);
-        coordinatesShipsArr.forEach((coordinates) => {
-            playersArr[i].gameboard.addShip(coordinates);
-        });
-    }
+    coordinatesShipsArr = getRandomCoordinates(nShips, size, playerIndex);
+    coordinatesShipsArr.forEach((coordinates) => {
+        player.gameboard.addShip(coordinates);
+    });
 }
 
 function getRandomCoordinates(nShips, size, shipIndex) {
@@ -247,9 +317,9 @@ function attachImages() {
             shipContainer[indexShip].style.top = `${e.clientY - initialClickPosition[1]}px`;
         }
     });
-    document.addEventListener('mouseup', (eMouseUp) => {
+    document.addEventListener('mouseup', () => {
         if (indexShip !== -1) {
-            if (isValidShipPosition(eMouseUp, shipContainer[indexShip])) {
+            if (isValidShipPosition(shipContainer[indexShip])) {
                 console.log('the ship can be placed');
             } else
                 console.log('the ship cannot be placed...');
