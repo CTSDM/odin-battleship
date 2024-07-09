@@ -46,7 +46,7 @@ function setUpManualPosition(button, size, playersArr) {
     manualButton.addEventListener('click', () => {
         restartPlayersGrid(size, playersArr);
         createDivShips();
-        attachImages(playersArr[0]);
+        attachImages();
         restartManualShipPlacement(manualButton, size, playersArr);
         manualButton.remove();
     });
@@ -62,7 +62,7 @@ function manualPositionStart(size, playersArr) {
         // we need to change the text and functionality of the manual ship place button...
         // for that i think it is better to remove the button and add a new one so the event listener are also removed
         // so we create a new button and delete the current button...
-        attachImages(playersArr[0]);
+        attachImages();
         restartManualShipPlacement(manualPositionButton, size, playersArr);
         manualPositionButton.remove();
     });
@@ -208,20 +208,19 @@ function placeShips(player, playerIndex, nShips, size) {
     let coordinatesShipsArr;
     coordinatesShipsArr = getRandomCoordinates(nShips, size, playerIndex);
     coordinatesShipsArr.forEach((coordinates) => {
-        colorPlayerShips(coordinates, playerIndex);
         player.gameboard.addShip(coordinates);
     });
 }
 
-function getRandomCoordinates(nShips, size, playerIndex) {
+function getRandomCoordinates(nShips, size, shipIndex) {
     // Returns a matrix of nShips with different lengths that are not overlapping
-    const shipArray = [];
+    const ship = [];
     for (let i = 0; i < nShips; ++i) {
-        shipArray.push([]);
+        ship.push([]);
     }
     for (let i = 0; i < nShips; ++i) {
         for (let j = 0; j < 2 + i; ++j) {
-            shipArray[i].push([0, 0]);
+            ship[i].push([0, 0]);
         }
     }
     // The first length is 2 and then increases by 1
@@ -239,7 +238,7 @@ function getRandomCoordinates(nShips, size, playerIndex) {
             if (i > 0) {
                 // We check if there are overlapping
                 for (let k = 0; k < i; ++k) {
-                    if (y === shipArray[k][0][1])
+                    if (y === ship[k][0][1])
                         break;
                     if (k === i - 1)
                         yValid = true;
@@ -248,17 +247,18 @@ function getRandomCoordinates(nShips, size, playerIndex) {
                 yValid = true;
 
             if (yValid) {
-                shipArray[i].forEach((position, idx) => {
+                ship[i].forEach((position, idx) => {
                     position[0] = x + idx;
                     position[1] = y;
                 })
             }
         }
     }
-    return shipArray;
+    colorPlayerShips(ship, shipIndex);
+    return ship;
 }
 
-function colorPlayerShips(shipPositions, i) {
+function colorPlayerShips(matrixPositions, i) {
     // By default the player has the gameboard on the left
     // In this version we can see both players' ships
     if (i === 1)
@@ -266,15 +266,18 @@ function colorPlayerShips(shipPositions, i) {
     else
         i = 1;
     const gameBoardPlayer = document.querySelectorAll('div.board');
-    shipPositions.forEach((position) => {
-        gameBoardPlayer[i].children[position[0] * 10 + position[1]].classList.add('humanPlayer');
+    matrixPositions.forEach((shipPositions) => {
+        shipPositions.forEach((position) => {
+            gameBoardPlayer[i].children[position[0] * 10 + position[1]].classList.add('humanPlayer');
+        });
     });
 }
+
 // let's create a drag and drop for the ship placement!
 // let's start with one ship!
 // add an event listener to the ship
 
-function attachImages(player) {
+function attachImages() {
     let activation = false;
     let indexShip = -1;
     const initialClickPosition = [];
@@ -320,16 +323,14 @@ function attachImages(player) {
                 // let's place the ship
                 // once i know the ship position is valid i can calculate the index where the ship can be placed
                 // in this position is should check if there are ships on the to positions where the new ship can be placed
-                const positions = getNewShipPosition(shipContainer[indexShip], player);
+                const positions = getNewShipPosition(shipContainer[indexShip]);
                 if (positions) {
                     // place the ship within the gameboard
                     // delete the image that is associated to the placed ship
                     console.log(positions);
                     console.log('the ship can be placed');
-                    shipContainer[indexShip].remove();
-                } else {
+                } else
                     console.log('the ship cannot be placed...');
-                }
             } else
                 console.log('the ship cannot be placed...');
             shipContainer[indexShip].style.position = 'static';
@@ -345,37 +346,24 @@ function getNewShipPosition(ship, player) {
     const boardPlayer1Coord = document.querySelector('.player1').getBoundingClientRect();
     const shipCoordinates = ship.getBoundingClientRect();
     let rotated;
-    if (ship.style.transform === 'rotate(90deg)')
+    if (ship.style.trasnform === 'rotate(90deg)')
         rotated = true;
     else
         rotated = false;
-    console.log(rotated);
     // at this point we know the ship is within bounds;
-    // the coordinates of the ship represent all the indexes of the board where the ship will be placed
-    // that is, that we need to have an array of arrays with all the position
-    // we can use player.gameboad.add ... and set the coordinates like that
-    // of course before adding we need to check whether or not that is something that is allowed
-    const indexes = [];
-    // while to have all the indexes
-    // we have to indicate the type of the ship
-    // maybe in the ship we could add a data that have the size of the ship...
-    // but i don't like that approach since the html can be changed by the user...
-    // for now let's go that route
-    // we assume that all the ships for now are of size 3x11
-    for (let i = 0; i < 3; ++i) {
-        const coordinate = [];
-        if (rotated) {
-            coordinate.push(Math.floor((shipCoordinates.top - boardPlayer1Coord.top) / 50) + i);
-            coordinate.push(Math.floor((shipCoordinates.left - boardPlayer1Coord.left) / 50));
-        } else {
-            coordinate.push(Math.floor((shipCoordinates.top - boardPlayer1Coord.top) / 50));
-            coordinate.push(Math.floor((shipCoordinates.left - boardPlayer1Coord.left) / 50) + i);
-        }
-        indexes.push(coordinate);
+    const indexes = [[], []];
+    if (rotated) {
+        indexes[1].push(Math.floor((shipCoordinates.top - boardPlayer1Coord.top) / 50));
+        indexes[1].push(Math.floor((shipCoordinates.top + 100 - boardPlayer1Coord.top) / 50));
+        indexes[0].push(Math.floor((shipCoordinates.left - boardPlayer1Coord.left) / 50));
+        indexes[0].push(Math.floor((shipCoordinates.left - boardPlayer1Coord.left) / 50));
+    } else {
+        indexes[0].push(Math.floor((shipCoordinates.left - boardPlayer1Coord.left) / 50));
+        indexes[0].push(Math.floor((shipCoordinates.left + 100 - boardPlayer1Coord.left) / 50));
+        indexes[1].push(Math.floor((shipCoordinates.bottom - boardPlayer1Coord.top) / 50));
+        indexes[1].push(Math.floor((shipCoordinates.bottom - boardPlayer1Coord.top) / 50));
     }
-    console.log(player.gameboard);
-    player.gameboard.addShip(indexes);
-    colorPlayerShips(indexes, 1);
+
     return indexes;
 }
 
@@ -387,19 +375,17 @@ function isValidShipPosition(ship) {
     const boardPlayer1Coord = document.querySelector('.player1').getBoundingClientRect();
     const shipCoordinates = ship.getBoundingClientRect();
     let rotated;
-    if (ship.style.transform === 'rotate(90deg)')
+    if (ship.style.trasnform === 'rotate(90deg)')
         rotated = true;
     else
         rotated = false;
-    console.log(boardPlayer1Coord);
-    console.log(shipCoordinates);
     if (boardPlayer1Coord.left < shipCoordinates.left && shipCoordinates.left < boardPlayer1Coord.right) {
         if (boardPlayer1Coord.top < shipCoordinates.top && shipCoordinates.top < boardPlayer1Coord.bottom)
             if (rotated) {
-                if (shipCoordinates.top + 100 < boardPlayer1Coord.bottom)
+                if (shipCoordinates.top + 150 < boardPlayer1Coord.bottom)
                     return true;
             } else
-                if (shipCoordinates.left + 100 < boardPlayer1Coord.right)
+                if (shipCoordinates.left + 150 < boardPlayer1Coord.right)
                     return true;
     }
     return false;
