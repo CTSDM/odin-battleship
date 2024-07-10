@@ -1,7 +1,6 @@
 import imageShip1 from "./images/smallShip.png";
-import imageShip2 from "./images/smallShip2.png";
 
-const IMAGES_SHIPS = [imageShip1, imageShip2];
+const IMAGES_SHIPS = imageShip1;
 import Player from './player'
 
 // the game now is not working when placing randomly the positions...!
@@ -15,18 +14,15 @@ export default function createBoard(size, numberOfShips) {
     loadGrid(size);
     const playersArr = [];
     createPlayers(playersArr, size);
-    let isComputerPlaying = true;
     placeShips(playersArr[1], 0, numberOfShips, size);
-    startGame(playersArr, isComputerPlaying, size);
-    manualPositionStart(size, playersArr);
     randomPositionStart(size, playersArr, numberOfShips);
+    setUpManualPosition(size, playersArr, numberOfShips);
 }
 
 function randomPositionStart(size, playersArr, numberOfShips) {
     const restartPositionButton = document.getElementById('randomize-placement');
     restartPositionButton.addEventListener('click', () => {
         const divShips = document.querySelector('.ships-images');
-        const manualPositionButton = document.getElementById('manual-placement');
         restartPlayersGrid(size, playersArr);
         playersArr.forEach((player, playerIndex) => {
             placeShips(player, playerIndex, numberOfShips, size);
@@ -34,24 +30,28 @@ function randomPositionStart(size, playersArr, numberOfShips) {
         if (divShips) {
             divShips.remove();
         }
-        setUpManualPosition(manualPositionButton, size, playersArr);
+        setUpManualPosition(size, playersArr, numberOfShips);
+        setUpStartButton();
+        // the second parameter of start game must be modified
+        startGame(playersArr, true, size);
     });
 }
 
-function setUpManualPosition(button, size, playersArr) {
+function setUpManualPosition(size, playersArr, nShips) {
+    const buttonPrev = document.getElementById('manual-placement');
     const manualButton = document.createElement('button');
     manualButton.id = 'manual-placement';
     manualButton.textContent = 'Manual placement of the ship';
     manualButton.type = 'button';
     manualButton.addEventListener('click', () => {
         restartPlayersGrid(size, playersArr);
-        createDivShips();
+        createDivShips(nShips);
         attachImages(playersArr[0]);
         restartManualShipPlacement(manualButton, size, playersArr);
         manualButton.remove();
     });
-    button.insertAdjacentElement('beforebegin', manualButton);
-    button.remove();
+    buttonPrev.insertAdjacentElement('beforebegin', manualButton);
+    buttonPrev.remove();
 }
 
 function manualPositionStart(size, playersArr) {
@@ -80,15 +80,15 @@ function restartManualShipPlacement(manualPositionButton, size, playersArr) {
     manualPositionButton.insertAdjacentElement('beforebegin', buttonRestart);
 }
 
-function createDivShips() {
+function createDivShips(nShips) {
     const divShips = document.createElement('div');
     divShips.classList.add('ships-images');
-    for (let i = 2; i < 4; ++i) {
+    for (let i = 0; i < nShips; ++i) {
         const img = document.createElement('img');
         console.log(img);
         console.log(divShips);
         img.draggable = false;
-        img.alt = `Ship of length ${i}`;
+        img.alt = `Ship of length ${i + 2}`;
         divShips.appendChild(img);
     }
     document.body.appendChild(divShips);
@@ -280,8 +280,8 @@ function attachImages(player) {
     const initialClickPosition = [];
     const shipContainer = [...document.querySelector('.ships-images').children];
     [...shipContainer].forEach((image, index) => {
-        image.src = IMAGES_SHIPS[index];
-        const width = 150 * (index + 1);
+        image.src = IMAGES_SHIPS;
+        const width = 100 + 50 * index;
         image.style.width = `${width}px`;
         // we need to add some initial 0deg rotation to the ships in order to not get an empty string when calling
         // the attribute style.transform
@@ -349,20 +349,17 @@ function getNewShipPosition(ship, player) {
         rotated = true;
     else
         rotated = false;
-    console.log(rotated);
     // at this point we know the ship is within bounds;
     // the coordinates of the ship represent all the indexes of the board where the ship will be placed
     // that is, that we need to have an array of arrays with all the position
     // we can use player.gameboad.add ... and set the coordinates like that
     // of course before adding we need to check whether or not that is something that is allowed
     const indexes = [];
-    // while to have all the indexes
-    // we have to indicate the type of the ship
-    // maybe in the ship we could add a data that have the size of the ship...
-    // but i don't like that approach since the html can be changed by the user...
-    // for now let's go that route
-    // we assume that all the ships for now are of size 3x11
-    for (let i = 0; i < 3; ++i) {
+    // we need to obtain the size of each ship
+    let sizeShip = getShipSize(shipCoordinates, rotated);
+    console.log(sizeShip);
+    // for loop to have all the indexes
+    for (let i = 0; i < sizeShip; ++i) {
         const coordinate = [];
         if (rotated) {
             coordinate.push(Math.floor((shipCoordinates.top - boardPlayer1Coord.top) / 50) + i);
@@ -379,6 +376,13 @@ function getNewShipPosition(ship, player) {
     return indexes;
 }
 
+function getShipSize(coordinates, isRotated) {
+    if (isRotated)
+        return Math.round((coordinates.bottom - coordinates.top) / 50);
+    else
+        return Math.round((coordinates.right - coordinates.left) / 50);
+}
+
 function isValidShipPosition(ship) {
     // when there is a mouse up it needs to be checked if a cell is within the coordinates
     // we have to take into account the size of the selected ship
@@ -393,14 +397,29 @@ function isValidShipPosition(ship) {
         rotated = false;
     console.log(boardPlayer1Coord);
     console.log(shipCoordinates);
+    let shipSize = getShipSize(shipCoordinates);
     if (boardPlayer1Coord.left < shipCoordinates.left && shipCoordinates.left < boardPlayer1Coord.right) {
         if (boardPlayer1Coord.top < shipCoordinates.top && shipCoordinates.top < boardPlayer1Coord.bottom)
             if (rotated) {
-                if (shipCoordinates.top + 100 < boardPlayer1Coord.bottom)
+                if (shipCoordinates.top + (shipSize - 1) * 50 < boardPlayer1Coord.bottom)
                     return true;
             } else
-                if (shipCoordinates.left + 100 < boardPlayer1Coord.right)
+                if (shipCoordinates.left + (shipSize - 1) * 50 < boardPlayer1Coord.right)
                     return true;
     }
     return false;
+}
+
+// <button id="start-game" type="button">Start the game!</button>
+function setUpStartButton() {
+    const button = document.getElementById('start-game');
+    console.log(button);
+    if (button)
+        return;
+    const divContainer = document.querySelector('.ship-selection');
+    const startButton = document.createElement('button');
+    startButton.id = 'start-game';
+    startButton.type = 'button';
+    startButton.textContent = 'Start the game!';
+    divContainer.insertAdjacentElement('beforeend', startButton);
 }
