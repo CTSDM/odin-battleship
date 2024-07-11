@@ -116,9 +116,9 @@ function createPlayers(players, size) {
 }
 
 function startGame(players, computer, size) {
-    createEvents(players, computer, size);
     const startGameButton = document.getElementById('start-game');
     startGameButton.addEventListener('click', () => {
+        createEvents(players, computer, size);
         const divShipPlacement = document.querySelector('.ship-selection');
         divShipPlacement.remove();
         players.forEach((player) => {
