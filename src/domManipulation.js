@@ -14,9 +14,9 @@ export default function createBoard(size, numberOfShips) {
     loadGrid(size);
     const playersArr = [];
     createPlayers(playersArr, size);
-    placeShips(playersArr[1], 0, numberOfShips, size);
     randomPositionStart(size, playersArr, numberOfShips);
     setUpManualPosition(size, playersArr, numberOfShips);
+    startGame(playersArr, true, size);
 }
 
 function randomPositionStart(size, playersArr, numberOfShips) {
@@ -25,16 +25,20 @@ function randomPositionStart(size, playersArr, numberOfShips) {
         const divShips = document.querySelector('.ships-images');
         restartPlayersGrid(size, playersArr);
         playersArr.forEach((player, playerIndex) => {
-            placeShips(player, playerIndex, numberOfShips, size);
+            placeShips(player, playerIndex, numberOfShips);
         });
         if (divShips) {
             divShips.remove();
         }
         setUpManualPosition(size, playersArr, numberOfShips);
-        setUpStartButton();
-        // the second parameter of start game must be modified
-        startGame(playersArr, true, size);
+        // we enable the button of starting the game
+        disableStartButton(false);
     });
+}
+
+function disableStartButton(flagEnable) {
+    const button = document.getElementById('start-game');
+    button.disabled = flagEnable;
 }
 
 function setUpManualPosition(size, playersArr, nShips) {
@@ -46,26 +50,13 @@ function setUpManualPosition(size, playersArr, nShips) {
     manualButton.addEventListener('click', () => {
         restartPlayersGrid(size, playersArr);
         createDivShips(nShips);
-        attachImages(playersArr[0]);
+        attachImages(playersArr[1], playersArr[0]);
         restartManualShipPlacement(manualButton, size, playersArr);
         manualButton.remove();
+        disableStartButton(true);
     });
     buttonPrev.insertAdjacentElement('beforebegin', manualButton);
     buttonPrev.remove();
-}
-
-function manualPositionStart(size, playersArr) {
-    const manualPositionButton = document.getElementById('manual-placement');
-    manualPositionButton.addEventListener('click', () => {
-        restartPlayersGrid(size, playersArr);
-        createDivShips();
-        // we need to change the text and functionality of the manual ship place button...
-        // for that i think it is better to remove the button and add a new one so the event listener are also removed
-        // so we create a new button and delete the current button...
-        attachImages(playersArr[0]);
-        restartManualShipPlacement(manualPositionButton, size, playersArr);
-        manualPositionButton.remove();
-    });
 }
 
 function restartManualShipPlacement(manualPositionButton, size, playersArr) {
@@ -75,6 +66,7 @@ function restartManualShipPlacement(manualPositionButton, size, playersArr) {
     buttonRestart.id = 'manual-placement';
     buttonRestart.addEventListener('click', () => {
         console.log('restarting manual ship placement...');
+
         restartPlayersGrid(size, playersArr);
     });
     manualPositionButton.insertAdjacentElement('beforebegin', buttonRestart);
@@ -129,6 +121,10 @@ function startGame(players, computer, size) {
     startGameButton.addEventListener('click', () => {
         const divShipPlacement = document.querySelector('.ship-selection');
         divShipPlacement.remove();
+        players.forEach((player) => {
+            console.log(player.gameboard);
+            console.log(player.gameboard.areShipsLeft());
+        });
     });
 }
 function createEvents(playersArr, flagComputer, size) {
@@ -148,7 +144,7 @@ function createEvents(playersArr, flagComputer, size) {
                 turn = (turn === 0) ? 1 : 0;
                 if (playersArr[turn ? 0 : 1].gameboard.areShipsLeft() === false) {
                     disableEventListeners();
-                    endGame();
+                    endGame(turn);
                     return;
                 }
             }
@@ -165,7 +161,6 @@ function createEvents(playersArr, flagComputer, size) {
                 break;
             }
             if (playersArr[turn ? 0 : 1].gameboard.areShipsLeft() === false) {
-
                 disableEventListeners();
                 endGame(turn);
             }
@@ -181,6 +176,7 @@ function createEvents(playersArr, flagComputer, size) {
 }
 
 function endGame(turn) {
+    console.log(turn);
     console.log('end game!');
     console.log(`player ${turn ? 0 : 1} won!`);
 }
@@ -204,16 +200,17 @@ function computerPlays(size) {
     return [x, y];
 }
 
-function placeShips(player, playerIndex, nShips, size) {
+function placeShips(player, playerIndex, nShips) {
     let coordinatesShipsArr;
-    coordinatesShipsArr = getRandomCoordinates(nShips, size, playerIndex);
+    let size = player.gameboard.size;
+    coordinatesShipsArr = getRandomCoordinates(nShips, size);
     coordinatesShipsArr.forEach((coordinates) => {
         colorPlayerShips(coordinates, playerIndex);
         player.gameboard.addShip(coordinates);
     });
 }
 
-function getRandomCoordinates(nShips, size, playerIndex) {
+function getRandomCoordinates(nShips, size) {
     // Returns a matrix of nShips with different lengths that are not overlapping
     const shipArray = [];
     for (let i = 0; i < nShips; ++i) {
@@ -274,7 +271,7 @@ function colorPlayerShips(shipPositions, i) {
 // let's start with one ship!
 // add an event listener to the ship
 
-function attachImages(player) {
+function attachImages(player, playerComputer) {
     let activation = false;
     let indexShip = -1;
     const initialClickPosition = [];
@@ -327,16 +324,24 @@ function attachImages(player) {
                     console.log(positions);
                     console.log('the ship can be placed');
                     shipContainer[indexShip].remove();
+                    const shipRemaining = [...document.querySelector('.ships-images').children];
+                    // the condition below  means that all the ships have been placed correctly
+                    if (shipRemaining.length === 0) {
+                        placeShips(playerComputer, 0, shipContainer.length);
+                        disableStartButton(false);
+                    }
+
                 } else {
                     console.log('the ship cannot be placed...');
                 }
-            } else
+            } else {
                 console.log('the ship cannot be placed...');
-            shipContainer[indexShip].style.position = 'static';
-            shipContainer[indexShip].top = 0;
-            shipContainer[indexShip].left = 0;
-            shipContainer[indexShip].style.transform = 'rotate(0deg)';
-            indexShip = -1;
+                shipContainer[indexShip].style.position = 'static';
+                shipContainer[indexShip].top = 0;
+                shipContainer[indexShip].left = 0;
+                shipContainer[indexShip].style.transform = 'rotate(0deg)';
+                indexShip = -1;
+            }
         }
     });
 }
@@ -370,7 +375,6 @@ function getNewShipPosition(ship, player) {
         }
         indexes.push(coordinate);
     }
-    console.log(player.gameboard);
     player.gameboard.addShip(indexes);
     colorPlayerShips(indexes, 1);
     return indexes;
@@ -408,18 +412,4 @@ function isValidShipPosition(ship) {
                     return true;
     }
     return false;
-}
-
-// <button id="start-game" type="button">Start the game!</button>
-function setUpStartButton() {
-    const button = document.getElementById('start-game');
-    console.log(button);
-    if (button)
-        return;
-    const divContainer = document.querySelector('.ship-selection');
-    const startButton = document.createElement('button');
-    startButton.id = 'start-game';
-    startButton.type = 'button';
-    startButton.textContent = 'Start the game!';
-    divContainer.insertAdjacentElement('beforeend', startButton);
 }
