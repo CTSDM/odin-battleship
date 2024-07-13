@@ -1,7 +1,7 @@
 {
   "name": "odin-battleship",
   "version": "1.0.0",
-  "description": "",
+  "description": "In this project we implement the game battleship for 1 or 2 players.",
   "private": "true",
   "main": "index.js",
   "scripts": {
@@ -26,5 +26,8 @@
   "dependencies": {
     "css-loader": "^7.1.1",
     "style-loader": "^4.0.0"
+  },
+  "directories": {
+    "test": "test"
   }
 }

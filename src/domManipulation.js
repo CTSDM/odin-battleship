@@ -108,7 +108,8 @@ function setUpEventListenersShips(playersArr) {
                 // once i know the ship position is valid i can calculate the index where the ship can be placed
                 // in this position is should check if there are ships on the to positions where the new ship can be placed
                 const positions = getNewShipPosition(shipContainer[indexShip], playersArr[1]);
-                if (positions) {
+                if (!shipCollision(playersArr[1], positions)) {
+                    addShipToPlayer(playersArr[1], positions, 1);
                     // place the ship within the gameboard
                     // delete the image that is associated to the placed ship
                     console.log('the ship can be placed');
@@ -122,6 +123,7 @@ function setUpEventListenersShips(playersArr) {
                     }
                 } else {
                     console.log('the ship cannot be placed...');
+                    restartImagePosition(shipContainer[indexShip]);
                 }
             } else {
                 console.log('the ship cannot be placed...');
@@ -130,6 +132,21 @@ function setUpEventListenersShips(playersArr) {
             indexShip = -1;
         }
     });
+}
+
+function shipCollision(player, positions) {
+    let isCollision = false;
+    positions.forEach((position) => {
+        if (player.gameboard.map[position[0]][position[1]]) {
+            isCollision = true;
+        }
+    });
+    return isCollision;
+}
+
+function addShipToPlayer(player, positions, index) {
+    player.gameboard.addShip(positions);
+    colorPlayerShips(positions, index);
 }
 
 function shipsLeft() {
@@ -315,8 +332,7 @@ function placeShips(player, playerIndex, nShips) {
     let size = player.gameboard.size;
     coordinatesShipsArr = getRandomCoordinates(nShips, size);
     coordinatesShipsArr.forEach((coordinates) => {
-        colorPlayerShips(coordinates, playerIndex);
-        player.gameboard.addShip(coordinates);
+        addShipToPlayer(player, coordinates, playerIndex);
     });
 }
 
@@ -406,8 +422,6 @@ function getNewShipPosition(ship, player) {
         }
         indexes.push(coordinate);
     }
-    player.gameboard.addShip(indexes);
-    colorPlayerShips(indexes, 1);
     return indexes;
 }
 
