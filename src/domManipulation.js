@@ -1,5 +1,6 @@
 import imageShip1 from "./images/smallShip.png";
-import { isValidShipPosition, getBoardSize, getNewShipPosition, getRandomCoordinates, shipCollision, computerPlays } from "./calculationFunctions";
+import { shipsLeft, isValidShipPosition, getBoardSize, getNewShipPosition, shipCollision, computerPlays, getRandomCoordinates } from "./calculationFunctions";
+import { addShipToPlayer } from "./objectsModification";
 
 const IMAGES_SHIPS = imageShip1;
 import Player from './player'
@@ -28,12 +29,22 @@ function randomPositionStart(playersArr, numberOfShips) {
     restartPositionButton.addEventListener('click', () => {
         restartPlayersGrid(playersArr);
         playersArr.forEach((player, playerIndex) => {
-            placeShips(player, playerIndex, numberOfShips);
+            placeShipsGameboard(player, playerIndex, numberOfShips);
         });
         setUpManualPosition(playersArr, numberOfShips);
         // we enable the button of starting the game
         disableDivShips();
         disableStartButton(false);
+    });
+}
+
+function placeShipsGameboard(player, playerIndex, nShips) {
+    let coordinatesShipsArr;
+    let size = player.gameboard.size;
+    coordinatesShipsArr = getRandomCoordinates(nShips, size);
+    coordinatesShipsArr.forEach((coordinates) => {
+        addShipToPlayer(player, coordinates);
+        colorPlayerShips(coordinates, playerIndex);
     });
 }
 
@@ -112,15 +123,16 @@ function setUpEventListenersShips(playersArr) {
                 // in this position is should check if there are ships on the to positions where the new ship can be placed
                 const positions = getNewShipPosition(shipContainer[indexShip], boardPlayer1Coord);
                 if (!shipCollision(playersArr[1], positions)) {
-                    addShipToPlayer(playersArr[1], positions, 1);
+                    addShipToPlayer(playersArr[1], positions);
+                    colorPlayerShips(positions, 1);
                     // place the ship within the gameboard
                     // delete the image that is associated to the placed ship
                     console.log('the ship can be placed');
                     shipContainer[indexShip].style.width = 0;
                     shipContainer[indexShip].style.height = 0;
                     // the condition below  means that all the ships have been placed correctly
-                    if (shipsLeft()) {
-                        placeShips(playersArr[0], 0, shipContainer.length);
+                    if (shipsLeft(shipContainer)) {
+                        placeShipsGameboard(playersArr[0], 0, shipContainer.length);
                         disableStartButton(false);
                         console.log('no ships left');
                     }
@@ -135,23 +147,6 @@ function setUpEventListenersShips(playersArr) {
             indexShip = -1;
         }
     });
-}
-
-function addShipToPlayer(player, positions, index) {
-    player.gameboard.addShip(positions);
-    colorPlayerShips(positions, index);
-}
-
-function shipsLeft() {
-    let anyLeft = true;
-    const shipContainer = [...document.querySelector('.ships-images').children];
-    [...shipContainer].forEach((image) => {
-        if (image.style.width !== '0px' && image.style.height !== '0px') {
-            anyLeft = false;
-            return;
-        }
-    });
-    return anyLeft;
 }
 
 function disableDivShips() {
@@ -192,7 +187,6 @@ function restartManualShipPlacement(manualPositionButton, playersArr) {
     buttonRestart.addEventListener('click', () => {
         disableStartButton(true);
         restartPlayersGrid(playersArr);
-        // we have to delete the ships
         enableDivShips();
     });
     manualPositionButton.insertAdjacentElement('beforebegin', buttonRestart);
@@ -362,15 +356,6 @@ function registerHit(playersArr, turn, row, column, cell) {
         return false;
 }
 
-function placeShips(player, playerIndex, nShips) {
-    let coordinatesShipsArr;
-    let size = player.gameboard.size;
-    coordinatesShipsArr = getRandomCoordinates(nShips, size);
-    coordinatesShipsArr.forEach((coordinates) => {
-        addShipToPlayer(player, coordinates, playerIndex);
-    });
-}
-
 function colorPlayerShips(shipPositions, i) {
     // By default the player has the gameboard on the left
     // In this version we can see both players' ships
@@ -383,4 +368,3 @@ function colorPlayerShips(shipPositions, i) {
         gameBoardPlayer[i].children[position[0] * 10 + position[1]].classList.add('humanPlayer');
     });
 }
-

@@ -118,6 +118,17 @@ export function computerPlays(size) {
     return [x, y];
 }
 
+export function shipsLeft(container) {
+    let anyLeft = true;
+    [...container].forEach((image) => {
+        if (image.style.width !== '0px' && image.style.height !== '0px') {
+            anyLeft = false;
+            return;
+        }
+    });
+    return anyLeft;
+}
+
 function getShipSize(coordinates, isRotated) {
     if (isRotated)
         return Math.ceil((coordinates.bottom - coordinates.top) / 50);
