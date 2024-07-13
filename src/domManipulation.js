@@ -14,21 +14,22 @@ export default function createBoard(size, numberOfShips) {
     loadGrid(size);
     const playersArr = [];
     createPlayers(playersArr, size);
-    randomPositionStart(size, playersArr, numberOfShips);
-    setUpManualPosition(size, playersArr, numberOfShips);
+    randomPositionStart(playersArr, numberOfShips);
+    setUpManualPosition(playersArr, numberOfShips);
     createDivShips(numberOfShips);
     setUpEventListenersShips(playersArr);
-    startGame(playersArr, true, size);
+    startGame(playersArr, true, numberOfShips);
 }
 
-function randomPositionStart(size, playersArr, numberOfShips) {
+function randomPositionStart(playersArr, numberOfShips) {
     const restartPositionButton = document.getElementById('randomize-placement');
+    restartPositionButton.textContent = 'Randomize ship placement';
     restartPositionButton.addEventListener('click', () => {
-        restartPlayersGrid(size, playersArr);
+        restartPlayersGrid(playersArr);
         playersArr.forEach((player, playerIndex) => {
             placeShips(player, playerIndex, numberOfShips);
         });
-        setUpManualPosition(size, playersArr, numberOfShips);
+        setUpManualPosition(playersArr, numberOfShips);
         // we enable the button of starting the game
         disableDivShips();
         disableStartButton(false);
@@ -174,16 +175,15 @@ function disableStartButton(flagEnable) {
     button.disabled = flagEnable;
 }
 
-function setUpManualPosition(size, playersArr, nShips) {
+function setUpManualPosition(playersArr, nShips) {
     const buttonPrev = document.getElementById('manual-placement');
     const manualButton = document.createElement('button');
     manualButton.id = 'manual-placement';
     manualButton.textContent = 'Manual placement of the ship';
     manualButton.type = 'button';
     manualButton.addEventListener('click', () => {
-        restartPlayersGrid(size, playersArr);
-        // attachImages(playersArr[1], playersArr[0]);
-        restartManualShipPlacement(manualButton, size, playersArr, nShips);
+        restartPlayersGrid(playersArr);
+        restartManualShipPlacement(manualButton, playersArr, nShips);
         manualButton.remove();
         disableStartButton(true);
         enableDivShips();
@@ -192,14 +192,14 @@ function setUpManualPosition(size, playersArr, nShips) {
     buttonPrev.remove();
 }
 
-function restartManualShipPlacement(manualPositionButton, size, playersArr) {
+function restartManualShipPlacement(manualPositionButton, playersArr) {
     const buttonRestart = document.createElement('button');
     buttonRestart.textContent = 'Restart manual ship placement';
     buttonRestart.type = 'button';
     buttonRestart.id = 'manual-placement';
     buttonRestart.addEventListener('click', () => {
         disableStartButton(true);
-        restartPlayersGrid(size, playersArr);
+        restartPlayersGrid(playersArr);
         // we have to delete the ships
         enableDivShips();
     });
@@ -219,7 +219,8 @@ function createDivShips(nShips) {
     setUpDivShips();
 }
 
-function restartPlayersGrid(size, playersArr) {
+function restartPlayersGrid(playersArr) {
+    const size = getBoardSize(playersArr[0]);
     loadGrid(size);
     createPlayers(playersArr, size);
 }
@@ -248,15 +249,27 @@ function createPlayers(players, size) {
     players.push(playerTwo);
 }
 
-function startGame(players, computer, size) {
+function startGame(players, computer, nShips) {
     const startGameButton = document.getElementById('start-game');
+    startGameButton.textContent = 'Start game!';
     startGameButton.addEventListener('click', () => {
-        createEvents(players, computer, size);
+        createEvents(players, computer, nShips);
+        removeAllButtons();
     });
+    disableStartButton(true);
 }
-function createEvents(playersArr, flagComputer, size) {
+
+function removeAllButtons() {
+    const buttonsDiv = document.querySelector('.ship-selection');
+    while (buttonsDiv.children.length > 0)
+        buttonsDiv.children[0].remove();
+}
+
+
+function createEvents(playersArr, flagComputer, numberOfShips) {
     // We associate each player with a board;
     // the function inside the event listener should not be an anonymous function
+    const size = getBoardSize(playersArr[0]);
     const divBoards = document.querySelectorAll('div.board');
     let turn = 0;
     divBoards[1].addEventListener('click', assignEventListener);
@@ -271,7 +284,7 @@ function createEvents(playersArr, flagComputer, size) {
                 turn = (turn === 0) ? 1 : 0;
                 if (playersArr[turn ? 0 : 1].gameboard.areShipsLeft() === false) {
                     disableEventListeners();
-                    endGame(turn);
+                    endGame(turn, playersArr, numberOfShips);
                     return;
                 }
             }
@@ -289,7 +302,7 @@ function createEvents(playersArr, flagComputer, size) {
             }
             if (playersArr[turn ? 0 : 1].gameboard.areShipsLeft() === false) {
                 disableEventListeners();
-                endGame(turn);
+                endGame(turn, playersArr, numberOfShips);
             }
         }
     }
@@ -302,10 +315,47 @@ function createEvents(playersArr, flagComputer, size) {
     }
 }
 
-function endGame(turn) {
+function endGame(turn, playersArr, numberOfShips) {
     console.log(turn);
     console.log('end game!');
     console.log(`player ${turn ? 0 : 1} won!`);
+    setUpReplayGame(playersArr, numberOfShips);
+}
+
+function setUpReplayGame(playersArr, numberOfShips) {
+    const divShips = document.querySelector('.ship-selection');
+    const replayButton = document.createElement('button');
+    replayButton.textContent = 'Play again';
+    replayButton.type = 'button';
+    replayButton.addEventListener('click', () => {
+        setUpPlayButtons(playersArr, numberOfShips);
+        replayButton.remove();
+    });
+    divShips.appendChild(replayButton);
+}
+
+function setUpPlayButtons(players, nShips) {
+    restartPlayersGrid(players);
+    const divButtons = document.querySelector('.ship-selection');
+    createPlayButtons(divButtons, players, nShips);
+    randomPositionStart(players, nShips);
+    setUpManualPosition(players, nShips);
+    startGame(players, true, nShips);
+}
+
+function createPlayButtons(container) {
+    const resetButton = document.createElement('button');
+    resetButton.id = 'randomize-placement';
+    resetButton.type = 'button';
+    const manualButton = document.createElement('button');
+    manualButton.id = 'manual-placement';
+    manualButton.type = 'button';
+    const startButton = document.createElement('button');
+    startButton.id = 'start-game';
+    startButton.type = 'button';
+    container.append(resetButton);
+    container.append(manualButton);
+    container.append(startButton);
 }
 
 function registerHit(playersArr, turn, row, column, cell) {
@@ -455,4 +505,8 @@ function isValidShipPosition(ship) {
                     return true;
     }
     return false;
+}
+
+function getBoardSize(player) {
+    return player.gameboard.size;
 }
