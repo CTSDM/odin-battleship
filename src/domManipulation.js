@@ -16,23 +16,140 @@ export default function createBoard(size, numberOfShips) {
     createPlayers(playersArr, size);
     randomPositionStart(size, playersArr, numberOfShips);
     setUpManualPosition(size, playersArr, numberOfShips);
+    createDivShips(numberOfShips);
+    setUpEventListenersShips(playersArr);
     startGame(playersArr, true, size);
 }
 
 function randomPositionStart(size, playersArr, numberOfShips) {
     const restartPositionButton = document.getElementById('randomize-placement');
     restartPositionButton.addEventListener('click', () => {
-        const divShips = document.querySelector('.ships-images');
         restartPlayersGrid(size, playersArr);
         playersArr.forEach((player, playerIndex) => {
             placeShips(player, playerIndex, numberOfShips);
         });
-        if (divShips) {
-            divShips.remove();
-        }
         setUpManualPosition(size, playersArr, numberOfShips);
         // we enable the button of starting the game
+        disableDivShips();
         disableStartButton(false);
+    });
+}
+
+function setUpDivShips() {
+    const shipContainer = [...document.querySelector('.ships-images').children];
+    [...shipContainer].forEach((image) => {
+        image.src = IMAGES_SHIPS;
+    });
+    enableDivShips();
+    disableDivShips();
+}
+
+function enableDivShips() {
+    const shipContainer = [...document.querySelector('.ships-images').children];
+    [...shipContainer].forEach((image, index) => {
+        const width = 100 + 50 * index;
+        image.style.width = `${width}px`;
+        image.style.height = '50px';
+        // we need to add some initial 0deg rotation to the ships in order to not get an empty string when calling
+        // the attribute style.transform
+        image.style.transform = 'rotate(0deg)';
+    });
+}
+
+function setUpEventListenersShips(playersArr) {
+    let activation = false;
+    let indexShip = -1;
+    const initialClickPosition = [];
+    const shipContainer = [...document.querySelector('.ships-images').children];
+    [...shipContainer].forEach((image, index) => {
+        image.addEventListener('mousedown', (eMouse) => {
+            activation = true;
+            indexShip = index;
+            initialClickPosition[0] = eMouse.clientX;
+            initialClickPosition[1] = eMouse.clientY;
+            image.addEventListener('mousemove', (e) => {
+                if (activation && indexShip !== -1) {
+                    shipContainer[indexShip].style.position = 'relative';
+                    shipContainer[indexShip].style.left = `${e.clientX - initialClickPosition[0]}px`;
+                    shipContainer[indexShip].style.top = `${e.clientY - initialClickPosition[1]}px`;
+                }
+            });
+        });
+    });
+
+    document.addEventListener('keypress', (eKey) => {
+        if (eKey.code === 'KeyR') {
+            let newRotationValue;
+            if (indexShip !== -1) {
+                const image = [...shipContainer][indexShip];
+                if (image.style.transform !== 'rotate(90deg)')
+                    newRotationValue = 90;
+                else
+                    newRotationValue = 0;
+                image.style.transform = `rotate(${newRotationValue}deg)`;
+            }
+        }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (activation && indexShip !== -1) {
+            shipContainer[indexShip].style.position = 'relative';
+            shipContainer[indexShip].style.left = `${e.clientX - initialClickPosition[0]}px`;
+            shipContainer[indexShip].style.top = `${e.clientY - initialClickPosition[1]}px`;
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (indexShip !== -1) {
+            if (isValidShipPosition(shipContainer[indexShip])) {
+                // let's place the ship
+                // once i know the ship position is valid i can calculate the index where the ship can be placed
+                // in this position is should check if there are ships on the to positions where the new ship can be placed
+                const positions = getNewShipPosition(shipContainer[indexShip], playersArr[1]);
+                if (positions) {
+                    // place the ship within the gameboard
+                    // delete the image that is associated to the placed ship
+                    console.log('the ship can be placed');
+                    shipContainer[indexShip].style.width = 0;
+                    shipContainer[indexShip].style.height = 0;
+                    // the condition below  means that all the ships have been placed correctly
+                    if (shipsLeft()) {
+                        placeShips(playersArr[0], 0, shipContainer.length);
+                        disableStartButton(false);
+                        console.log('no ships left');
+                    }
+                } else {
+                    console.log('the ship cannot be placed...');
+                }
+            } else {
+                console.log('the ship cannot be placed...');
+                shipContainer[indexShip].style.position = 'static';
+                shipContainer[indexShip].top = 0;
+                shipContainer[indexShip].left = 0;
+                shipContainer[indexShip].style.transform = 'rotate(0deg)';
+            }
+            indexShip = -1;
+        }
+    });
+}
+
+function shipsLeft() {
+    let anyLeft = true;
+    const shipContainer = [...document.querySelector('.ships-images').children];
+    [...shipContainer].forEach((image) => {
+        if (image.style.width !== '0px' && image.style.height !== '0px') {
+            anyLeft = false;
+            return;
+        }
+    });
+    return anyLeft;
+}
+
+function disableDivShips() {
+    const shipContainer = [...document.querySelector('.ships-images').children];
+    [...shipContainer].forEach((image) => {
+        image.style.width = '0px';
+        image.style.height = '0px';
     });
 }
 
@@ -49,17 +166,17 @@ function setUpManualPosition(size, playersArr, nShips) {
     manualButton.type = 'button';
     manualButton.addEventListener('click', () => {
         restartPlayersGrid(size, playersArr);
-        createDivShips(nShips);
-        attachImages(playersArr[1], playersArr[0]);
+        // attachImages(playersArr[1], playersArr[0]);
         restartManualShipPlacement(manualButton, size, playersArr, nShips);
         manualButton.remove();
         disableStartButton(true);
+        enableDivShips();
     });
     buttonPrev.insertAdjacentElement('beforebegin', manualButton);
     buttonPrev.remove();
 }
 
-function restartManualShipPlacement(manualPositionButton, size, playersArr, nShips) {
+function restartManualShipPlacement(manualPositionButton, size, playersArr) {
     const buttonRestart = document.createElement('button');
     buttonRestart.textContent = 'Restart manual ship placement';
     buttonRestart.type = 'button';
@@ -68,14 +185,12 @@ function restartManualShipPlacement(manualPositionButton, size, playersArr, nShi
         disableStartButton(true);
         restartPlayersGrid(size, playersArr);
         // we have to delete the ships
-        createDivShips(nShips);
-        attachImages(playersArr[1], playersArr[0]);
+        enableDivShips();
     });
     manualPositionButton.insertAdjacentElement('beforebegin', buttonRestart);
 }
 
 function createDivShips(nShips) {
-    removeDivShips();
     const divShips = document.createElement('div');
     divShips.classList.add('ships-images');
     for (let i = 0; i < nShips; ++i) {
@@ -85,12 +200,7 @@ function createDivShips(nShips) {
         divShips.appendChild(img);
     }
     document.body.appendChild(divShips);
-}
-
-function removeDivShips() {
-    const divShips = document.querySelector('.ships-images');
-    if (divShips)
-        divShips.remove();
+    setUpDivShips();
 }
 
 function restartPlayersGrid(size, playersArr) {
@@ -126,8 +236,6 @@ function startGame(players, computer, size) {
     const startGameButton = document.getElementById('start-game');
     startGameButton.addEventListener('click', () => {
         createEvents(players, computer, size);
-        const divShipPlacement = document.querySelector('.ship-selection');
-        divShipPlacement.remove();
     });
 }
 function createEvents(playersArr, flagComputer, size) {
@@ -268,83 +376,6 @@ function colorPlayerShips(shipPositions, i) {
     const gameBoardPlayer = document.querySelectorAll('div.board');
     shipPositions.forEach((position) => {
         gameBoardPlayer[i].children[position[0] * 10 + position[1]].classList.add('humanPlayer');
-    });
-}
-// let's create a drag and drop for the ship placement!
-// let's start with one ship!
-// add an event listener to the ship
-
-function attachImages(player, playerComputer) {
-    let activation = false;
-    let indexShip = -1;
-    const initialClickPosition = [];
-    const shipContainer = [...document.querySelector('.ships-images').children];
-    [...shipContainer].forEach((image, index) => {
-        image.src = IMAGES_SHIPS;
-        const width = 100 + 50 * index;
-        image.style.width = `${width}px`;
-        // we need to add some initial 0deg rotation to the ships in order to not get an empty string when calling
-        // the attribute style.transform
-        image.style.transform = 'rotate(0deg)';
-        image.addEventListener('mousedown', (eMouse) => {
-            activation = true;
-            indexShip = index;
-            initialClickPosition[0] = eMouse.clientX;
-            initialClickPosition[1] = eMouse.clientY;
-        });
-    });
-    // we add rotation if the user press down the keyCode R
-    document.addEventListener('keypress', (eKey) => {
-        if (eKey.code === 'KeyR') {
-            let newRotationValue;
-            if (indexShip !== -1) {
-                const image = [...shipContainer][indexShip];
-                if (image.style.transform !== 'rotate(90deg)')
-                    newRotationValue = 90;
-                else
-                    newRotationValue = 0;
-                image.style.transform = `rotate(${newRotationValue}deg)`;
-            }
-        }
-    });
-    document.addEventListener('mousemove', (e) => {
-        if (activation && indexShip !== -1) {
-            shipContainer[indexShip].style.position = 'relative';
-            shipContainer[indexShip].style.left = `${e.clientX - initialClickPosition[0]}px`;
-            shipContainer[indexShip].style.top = `${e.clientY - initialClickPosition[1]}px`;
-        }
-    });
-    document.addEventListener('mouseup', () => {
-        if (indexShip !== -1) {
-            if (isValidShipPosition(shipContainer[indexShip])) {
-                // let's place the ship
-                // once i know the ship position is valid i can calculate the index where the ship can be placed
-                // in this position is should check if there are ships on the to positions where the new ship can be placed
-                const positions = getNewShipPosition(shipContainer[indexShip], player);
-                if (positions) {
-                    // place the ship within the gameboard
-                    // delete the image that is associated to the placed ship
-                    console.log('the ship can be placed');
-                    shipContainer[indexShip].remove();
-                    const shipRemaining = [...document.querySelector('.ships-images').children];
-                    // the condition below  means that all the ships have been placed correctly
-                    if (shipRemaining.length === 0) {
-                        placeShips(playerComputer, 0, shipContainer.length);
-                        disableStartButton(false);
-                    }
-
-                } else {
-                    console.log('the ship cannot be placed...');
-                }
-            } else {
-                console.log('the ship cannot be placed...');
-                shipContainer[indexShip].style.position = 'static';
-                shipContainer[indexShip].top = 0;
-                shipContainer[indexShip].left = 0;
-                shipContainer[indexShip].style.transform = 'rotate(0deg)';
-                indexShip = -1;
-            }
-        }
     });
 }
 
