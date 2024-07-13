@@ -1,5 +1,5 @@
 import imageShip1 from "./images/smallShip.png";
-import { isValidShipPosition, getBoardSize, getNewShipPosition, getRandomCoordinates, shipCollision, computerPlays } from "./calculationFunction";
+import { isValidShipPosition, getBoardSize, getNewShipPosition, getRandomCoordinates, shipCollision, computerPlays } from "./calculationFunctions";
 
 const IMAGES_SHIPS = imageShip1;
 import Player from './player'
