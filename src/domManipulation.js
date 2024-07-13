@@ -47,13 +47,22 @@ function setUpDivShips() {
 function enableDivShips() {
     const shipContainer = [...document.querySelector('.ships-images').children];
     [...shipContainer].forEach((image, index) => {
-        const width = 100 + 50 * index;
-        image.style.width = `${width}px`;
-        image.style.height = '50px';
-        // we need to add some initial 0deg rotation to the ships in order to not get an empty string when calling
-        // the attribute style.transform
-        image.style.transform = 'rotate(0deg)';
+        restartImagePosition(image);
+        restartSizeImage(image, index);
     });
+}
+
+function restartImagePosition(image) {
+    image.style.position = 'static';
+    image.top = 0;
+    image.left = 0;
+    image.style.transform = 'rotate(0deg)';
+}
+
+function restartSizeImage(image, index) {
+    const width = 100 + 50 * index;
+    image.style.width = `${width}px`;
+    image.style.height = '50px';
 }
 
 function setUpEventListenersShips(playersArr) {
@@ -67,13 +76,6 @@ function setUpEventListenersShips(playersArr) {
             indexShip = index;
             initialClickPosition[0] = eMouse.clientX;
             initialClickPosition[1] = eMouse.clientY;
-            image.addEventListener('mousemove', (e) => {
-                if (activation && indexShip !== -1) {
-                    shipContainer[indexShip].style.position = 'relative';
-                    shipContainer[indexShip].style.left = `${e.clientX - initialClickPosition[0]}px`;
-                    shipContainer[indexShip].style.top = `${e.clientY - initialClickPosition[1]}px`;
-                }
-            });
         });
     });
 
@@ -123,10 +125,7 @@ function setUpEventListenersShips(playersArr) {
                 }
             } else {
                 console.log('the ship cannot be placed...');
-                shipContainer[indexShip].style.position = 'static';
-                shipContainer[indexShip].top = 0;
-                shipContainer[indexShip].left = 0;
-                shipContainer[indexShip].style.transform = 'rotate(0deg)';
+                restartImagePosition(shipContainer[indexShip]);
             }
             indexShip = -1;
         }
