@@ -6,23 +6,31 @@ import { setUpPlayerName } from "./usernameDOM.js";
 const IMAGES_SHIPS = imageShip1;
 import Player from './player'
 
-// the game now is not working when placing randomly the positions...!
-
 export default function createBoard(size, numberOfShips) {
-    // we load the grid
-    // we obtain the ship positions
-    // we draw it on the board
-    // do a mockup!
-    // don't launch the events until the game really starts!
     loadGrid(size);
+    setUpPlayerName(disableButtons);
+    setUpFunctionality(numberOfShips, size);
+    disableButtons(true);
+}
+
+function setUpFunctionality(numberOfShips, size) {
     const playersArr = [];
-    setUpPlayerName();
     createPlayers(playersArr, size);
     randomPositionStart(playersArr, numberOfShips);
     setUpManualPosition(playersArr, numberOfShips);
     createDivShips(numberOfShips);
     setUpEventListenersShips(playersArr);
     startGame(playersArr, true, numberOfShips);
+}
+
+function disableButtons(flagDisable, flagLastButton = false) {
+    const shipButtons = [...document.querySelector('.ship-selection').children];
+    shipButtons.forEach((button, index) => {
+        if (flagLastButton)
+            if (index === shipButtons.length - 1)
+                return
+        button.disabled = flagDisable;
+    });
 }
 
 function randomPositionStart(playersArr, numberOfShips) {
@@ -244,7 +252,6 @@ function startGame(players, computer, nShips) {
         createEvents(players, computer, nShips);
         removeAllButtons();
     });
-    disableStartButton(true);
 }
 
 function removeAllButtons() {

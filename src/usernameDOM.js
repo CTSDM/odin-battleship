@@ -1,31 +1,39 @@
-export function setUpPlayerName() {
+export function setUpPlayerName(callbackDisableButtons) {
     const containerNames = document.querySelector('.players-container');
-    setUpDivForm(containerNames);
+    setUpDivForm(containerNames, callbackDisableButtons);
 }
 
-function setUpDivForm(container) {
+function setUpDivForm(container, callback) {
     const divContainerFormPlayerName = document.createElement('div');
     divContainerFormPlayerName.classList.add('container-form');
-    setUpDivContainerFormName(divContainerFormPlayerName);
+    setUpDivContainerFormName(divContainerFormPlayerName, callback);
     container.insertAdjacentElement('afterend', divContainerFormPlayerName);
 }
 
-function setUpDivContainerFormName(divContainer) {
+function setUpDivContainerFormName(divContainer, callback) {
     const formPlayerName = document.createElement('form');
     setUpForm(formPlayerName);
     divContainer.appendChild(formPlayerName);
-    formPlayerName.addEventListener('submit', formEvent);
+    formPlayerName.addEventListener('submit', (e) => {
+        formEvent(e, callback);
+    });
 }
 
-function formEvent(e) {
+function getPlayerName() {
+    const inputPlayer = document.getElementById('player-name-text');
+    const inputPlayerName = inputPlayer.value;
+    return inputPlayerName;
+}
+
+function formEvent(e, callback) {
     const form = e.target;
     e.preventDefault();
     const parentElement = e.target.parentElement;
-    const inputPlayer = document.getElementById('player-name-text');
-    const inputPlayerName = inputPlayer.value;
-    if (isValidInput(inputPlayerName)) {
-        setPlayerName(inputPlayerName);
+    const playerName = getPlayerName();
+    if (isValidInput(playerName)) {
+        setPlayerName(playerName);
         parentElement.remove();
+        callback(false, true);
     } else {
         showErrorMessageInput(form);
     }
