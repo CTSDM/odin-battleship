@@ -54,7 +54,8 @@ function placeShipsGameboard(player, playerIndex, nShips) {
     coordinatesShipsArr = getRandomCoordinates(nShips, size);
     coordinatesShipsArr.forEach((coordinates) => {
         addShipToPlayer(player, coordinates);
-        colorPlayerShips(coordinates, playerIndex);
+        if (playerIndex === 1)
+            colorPlayerShips(coordinates, playerIndex);
     });
 }
 
