@@ -1,6 +1,7 @@
 import imageShip1 from "./images/smallShip.png";
 import { shipsLeft, isValidShipPosition, getBoardSize, getNewShipPosition, shipCollision, computerPlays, getRandomCoordinates } from "./calculationFunctions";
 import { addShipToPlayer } from "./objectsModification";
+import { setUpPlayerName } from "./usernameDOM.js";
 
 const IMAGES_SHIPS = imageShip1;
 import Player from './player'
@@ -15,6 +16,7 @@ export default function createBoard(size, numberOfShips) {
     // don't launch the events until the game really starts!
     loadGrid(size);
     const playersArr = [];
+    setUpPlayerName();
     createPlayers(playersArr, size);
     randomPositionStart(playersArr, numberOfShips);
     setUpManualPosition(playersArr, numberOfShips);

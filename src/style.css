@@ -12,6 +12,7 @@ body {
 .players-container {
     display: grid;
     grid-template-columns: 1fr 50px 1fr;
+    justify-items: center;
 }
 
 .board {
@@ -36,7 +37,7 @@ body {
     background: red;
 }
 
-.player-name {
+.players-name {
     place-self: center;
     font-size: 1.5rem;
     font-weight: 700;
@@ -62,5 +63,27 @@ body {
 
 .ships-images {
     display: flex;
+    gap: 20px;
+}
+
+.error {
+    color: red;
+    font-weight: 800;
+    font-size: 1.5rem;
+}
+
+.container-form {
+    display: flex;
+    justify-content: center;
+    padding: 2px;
+}
+
+#player-data {
+    padding: 5px;
+    display: flex;
+    border: 2px solid blue;
+    border-radius: 5px;
+    justify-content: center;
+    background: lightblue;
     gap: 20px;
 }
