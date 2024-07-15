@@ -367,8 +367,6 @@ function registerHit(playersArr, turn, row, column, cell) {
 }
 
 function colorPlayerShips(shipPositions, i) {
-    // By default the player has the gameboard on the left
-    // In this version we can see both players' ships
     if (i === 1)
         i = 0;
     else

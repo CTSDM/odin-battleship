@@ -68,42 +68,70 @@ export function shipCollision(player, positions) {
 
 export function getRandomCoordinates(nShips, size) {
     // Returns a matrix of nShips with different lengths that are not overlapping
+    const initialSize = 2;
     const shipArray = [];
     for (let i = 0; i < nShips; ++i) {
         shipArray.push([]);
     }
     for (let i = 0; i < nShips; ++i) {
-        for (let j = 0; j < 2 + i; ++j) {
+        for (let j = 0; j < initialSize + i; ++j) {
             shipArray[i].push([0, 0]);
         }
     }
     // The first length is 2 and then increases by 1
-    // The ships are placed vertically
+    // The ships can have horizontal or vertical orientation
     for (let i = 0; i < nShips; ++i) {
-        let yValid = false;
-        while (yValid === false) {
-            let x, y;
-            x = Math.floor(Math.random() * size);
-            y = Math.floor(Math.random() * size);
+        let positionValid = false;
+        let horizontal = getRandomTrueFalse();
+        while (positionValid === false) {
+            let row, column;
+            row = Math.floor(Math.random() * size);
+            column = Math.floor(Math.random() * size);
 
-            if (x + i + 2 > 9)
+            let selectedDirection = row;
+            // check if the ship will actually fit within the bounds of the gameboard
+            if (horizontal)
+                selectedDirection = column;
+            if (selectedDirection + i + initialSize > size - 1)
                 continue;
 
             if (i > 0) {
+                // the first ship position is never check as there is no previous ship
                 // We check if there are overlapping
+                // we check all the current positions for the ships that are already validated
+                const totalLength = initialSize + i;
+                let noCollision = true;
                 for (let k = 0; k < i; ++k) {
-                    if (y === shipArray[k][0][1])
-                        break;
-                    if (k === i - 1)
-                        yValid = true;
+                    shipArray[k].forEach((position) => {
+                        for (let j = 0; j < totalLength; ++j) {
+                            if (horizontal) {
+                                if (position[0] === row && position[1] === column + j) {
+                                    noCollision = false;
+                                    return;
+                                }
+                            } else {
+                                if (position[0] === row + j && position[1] === column) {
+                                    noCollision = false;
+                                    return;
+                                }
+                            }
+                        }
+                    });
+                    if (k === i - 1 && noCollision)
+                        positionValid = true;
                 }
             } else
-                yValid = true;
+                positionValid = true;
 
-            if (yValid) {
+            if (positionValid) {
                 shipArray[i].forEach((position, idx) => {
-                    position[0] = x + idx;
-                    position[1] = y;
+                    if (horizontal) {
+                        position[0] = row;
+                        position[1] = column + idx;
+                    } else {
+                        position[0] = row + idx;
+                        position[1] = column;
+                    }
                 })
             }
         }
@@ -134,4 +162,12 @@ function getShipSize(coordinates, isRotated) {
         return Math.ceil((coordinates.bottom - coordinates.top) / 50);
     else
         return Math.ceil((coordinates.right - coordinates.left) / 50);
+}
+
+function getRandomTrueFalse() {
+    const randomNumber = Math.random();
+    if (randomNumber >= 0.5)
+        return true
+    else
+        return false
 }
