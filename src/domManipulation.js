@@ -268,12 +268,13 @@ function createEvents(playersArr, flagComputer, numberOfShips) {
     const size = getBoardSize(playersArr[0]);
     const divBoards = document.querySelectorAll('div.board');
     let turn = 0;
+    let computerIsPlaying = false;
     divBoards[1].addEventListener('click', assignEventListener);
     if (flagComputer === false)
         divBoards[0].addEventListener('click', assignEventListener);
 
     function assignEventListener(event) {
-        if (event.target.dataset.row !== undefined) {
+        if (event.target.dataset.row !== undefined && computerIsPlaying === false) {
             const row = event.target.dataset.row;
             const column = event.target.dataset.column;
             if (registerHit(playersArr, turn, row, column, event.target)) {
@@ -285,21 +286,29 @@ function createEvents(playersArr, flagComputer, numberOfShips) {
                 }
             }
         }
-        if (flagComputer === true && turn === 1) {
-            while (true) {
-                const coords = computerPlays(playersArr[1].gameboard.map.length);
-                const row = coords[0], column = coords[1];
-                const cell = divBoards[0].children[row * size + column];
-                if (registerHit(playersArr, turn, row, column, cell))
-                    turn = (turn === 0 ? 1 : 0);
-                else
-                    continue;
-                break;
-            }
-            if (playersArr[turn ? 0 : 1].gameboard.areShipsLeft() === false) {
-                disableEventListeners();
-                endGame(turn, playersArr, numberOfShips);
-            }
+        if (flagComputer === true && turn === 1 && computerIsPlaying === false) {
+            computerIsPlaying = true;
+            enableComputerThinkingDiv(true);
+            setTimeout(function() {
+                let thinking = false;
+                while (true) {
+                    thinking = true
+                    const coords = computerPlays(playersArr[1].gameboard.map.length);
+                    const row = coords[0], column = coords[1];
+                    const cell = divBoards[0].children[row * size + column];
+                    if (registerHit(playersArr, turn, row, column, cell))
+                        turn = (turn === 0 ? 1 : 0);
+                    else
+                        continue;
+                    break;
+                }
+                if (playersArr[turn ? 0 : 1].gameboard.areShipsLeft() === false) {
+                    disableEventListeners();
+                    endGame(turn, playersArr, numberOfShips);
+                }
+                computerIsPlaying = false;
+                enableComputerThinkingDiv(false);
+            }, 1000);
         }
     }
 
@@ -309,6 +318,18 @@ function createEvents(playersArr, flagComputer, numberOfShips) {
             divBoard.removeEventListener('click', assignEventListener);
         });
     }
+}
+
+function enableComputerThinkingDiv(flag) {
+    const divSeparators = [...document.querySelectorAll('.separator')];
+    divSeparators.forEach((div, index) => {
+        if (flag) {
+            if (index !== 0)
+                div.textContent = 'COMPUTER is THINKING';
+        } else {
+            div.textContent = '';
+        }
+    });
 }
 
 function endGame(turn, playersArr, numberOfShips) {
