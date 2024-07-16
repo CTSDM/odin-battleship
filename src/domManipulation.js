@@ -1,10 +1,11 @@
 import imageShip1 from "./images/smallShip.png";
 import { shipsLeft, isValidShipPosition, getBoardSize, getNewShipPosition, shipCollision, computerPlays, getRandomCoordinates } from "./calculationFunctions";
-import { addShipToPlayer } from "./objectsModification";
+import { addShipToPlayer, createGameRecord } from "./objectsModification";
 import { setUpPlayerName } from "./usernameDOM.js";
 
 const IMAGES_SHIPS = imageShip1;
 import Player from './player'
+import Gameboard from "./gameboard.js";
 
 export default function createBoard(size, numberOfShips) {
     loadGrid(size);
@@ -261,8 +262,8 @@ function removeAllButtons() {
         buttonsDiv.children[0].remove();
 }
 
-
 function createEvents(playersArr, flagComputer, numberOfShips) {
+    const gameRecord = createGameRecord();
     // We associate each player with a board;
     // the function inside the event listener should not be an anonymous function
     const size = getBoardSize(playersArr[0]);
@@ -274,31 +275,33 @@ function createEvents(playersArr, flagComputer, numberOfShips) {
         divBoards[0].addEventListener('click', assignEventListener);
 
     function assignEventListener(event) {
-        if (event.target.dataset.row !== undefined && computerIsPlaying === false) {
-            const row = event.target.dataset.row;
-            const column = event.target.dataset.column;
-            if (registerHit(playersArr, turn, row, column, event.target)) {
-                turn = (turn === 0) ? 1 : 0;
-                if (playersArr[turn ? 0 : 1].gameboard.areShipsLeft() === false) {
-                    disableEventListeners();
-                    endGame(turn, playersArr, numberOfShips);
-                    return;
-                }
+        const row = event.target.dataset.row;
+        const column = event.target.dataset.column;
+        let checkValid = checkValidPosition(playersArr, turn, row, column);
+        if (checkValid && computerIsPlaying === false) {
+            registerHit(playersArr, turn, row, column, event.target, gameRecord[turn]);
+            gameRecord[turn].moves.push([row, column]);
+            turn = (turn === 0) ? 1 : 0;
+            if (playersArr[turn ? 0 : 1].gameboard.areShipsLeft() === false) {
+                disableEventListeners();
+                endGame(turn, playersArr, numberOfShips);
+                return;
             }
         }
         if (flagComputer === true && turn === 1 && computerIsPlaying === false) {
             computerIsPlaying = true;
             enableComputerThinkingDiv(true);
             setTimeout(function() {
-                let thinking = false;
                 while (true) {
-                    thinking = true
                     const coords = computerPlays(playersArr[1].gameboard.map.length);
                     const row = coords[0], column = coords[1];
                     const cell = divBoards[0].children[row * size + column];
-                    if (registerHit(playersArr, turn, row, column, cell))
+                    let checkValid = checkValidPosition(playersArr, turn, row, column);
+                    gameRecord[turn].moves.push([row, column]);
+                    if (checkValid) {
+                        registerHit(playersArr, turn, row, column, cell, gameRecord[turn]);
                         turn = (turn === 0 ? 1 : 0);
-                    else
+                    } else
                         continue;
                     break;
                 }
@@ -375,16 +378,23 @@ function createPlayButtons(container) {
     container.append(startButton);
 }
 
-function registerHit(playersArr, turn, row, column, cell) {
-    if (playersArr[turn].gameboard.positionsVisited[row][column] === undefined) {
-        playersArr[turn].gameboard.receiveAttack([row, column]);
-        if (playersArr[turn].gameboard.positionsVisited[row][column] === true)
-            cell.classList.add('hit');
-        else
-            cell.classList.add('no-hit');
-        return true;
-    } else
-        return false;
+function registerHit(playersArr, turn, row, column, cell, player) {
+    playersArr[turn].gameboard.receiveAttack([row, column]);
+    if (playersArr[turn].gameboard.positionsVisited[row][column] === true) {
+        cell.classList.add('hit');
+        player.hits.push(true);
+    }
+    else {
+        cell.classList.add('no-hit');
+        player.hits.push(false);
+    }
+}
+
+function checkValidPosition(playersArr, turn, row, column) {
+    if (playersArr[turn].gameboard.positionsVisited[row][column] === undefined)
+        return true
+    else
+        return false
 }
 
 function colorPlayerShips(shipPositions, i) {
