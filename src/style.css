@@ -38,17 +38,20 @@ body {
 }
 
 .players-name {
-    place-self: center;
+    justify-self: center;
+    align-self: top;
     font-size: 1.5rem;
     font-weight: 700;
 }
 
 .hit {
     background-color: yellow;
+    transition: background-color 0.25s ease;
 }
 
 .no-hit {
     background-color: white;
+    transition: background-color 0.25s ease;
 }
 
 .humanPlayer {
