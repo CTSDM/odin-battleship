@@ -262,7 +262,7 @@ function removeAllButtons() {
         buttonsDiv.children[0].remove();
 }
 
-function createEvents(playersArr, flagComputer, numberOfShips) {
+function createEvents(playersArr, flagComputer, numberOfShips, isRandom = false) {
     const gameRecord = createGameRecord();
     // We associate each player with a board;
     // the function inside the event listener should not be an anonymous function
@@ -270,9 +270,9 @@ function createEvents(playersArr, flagComputer, numberOfShips) {
     const divBoards = document.querySelectorAll('div.board');
     let turn = 0;
     let computerIsPlaying = false;
-    divBoards[1].addEventListener('click', assignEventListener);
+    divBoards[1].addEventListener('mouseup', assignEventListener);
     if (flagComputer === false)
-        divBoards[0].addEventListener('click', assignEventListener);
+        divBoards[0].addEventListener('mouseup', assignEventListener);
 
     function assignEventListener(event) {
         const row = event.target.dataset.row;
@@ -293,12 +293,12 @@ function createEvents(playersArr, flagComputer, numberOfShips) {
             enableComputerThinkingDiv(true);
             setTimeout(function() {
                 while (true) {
-                    const coords = computerPlays(playersArr[1].gameboard.map.length);
+                    const coords = computerPlays(playersArr[1].gameboard.map.length, gameRecord[turn], isRandom);
                     const row = coords[0], column = coords[1];
                     const cell = divBoards[0].children[row * size + column];
                     let checkValid = checkValidPosition(playersArr, turn, row, column);
-                    gameRecord[turn].moves.push([row, column]);
                     if (checkValid) {
+                        gameRecord[turn].moves.push([row, column]);
                         registerHit(playersArr, turn, row, column, cell, gameRecord[turn]);
                         turn = (turn === 0 ? 1 : 0);
                     } else
@@ -383,6 +383,10 @@ function registerHit(playersArr, turn, row, column, cell, player) {
     if (playersArr[turn].gameboard.positionsVisited[row][column] === true) {
         cell.classList.add('hit');
         player.hits.push(true);
+        if (turn === 1) {
+            player.lastHitIndex = player.moves.length - 1;
+            player.searching = true;
+        }
     }
     else {
         cell.classList.add('no-hit');

@@ -10,6 +10,8 @@ export function createGameRecord() {
     const computer = {
         moves: [],
         hits: [],
+        searching: false,
+        lastHitIndex: 0,
     };
 
     return [human, computer];

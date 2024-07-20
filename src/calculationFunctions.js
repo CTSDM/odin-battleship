@@ -139,7 +139,47 @@ export function getRandomCoordinates(nShips, size) {
     return shipArray;
 }
 
-export function computerPlays(size) {
+export function computerPlays(size, computerPlayRecord, isRandom) {
+    if (isRandom) {
+        return computerPlaysRandom(size);
+    }
+    if (computerPlayRecord.searching === false)
+        return computerPlaysRandom(size);
+    else {
+        const newCords = getNearbyCoordinates(size, computerPlayRecord);
+        if (newCords === -1)
+            return computerPlaysRandom(size);
+        else
+            return newCords;
+    }
+}
+
+function getNearbyCoordinates(size, computerRecord) {
+    // let's go from top to botton  in counter clock wise direction
+    const possiblePos = [[-1, 0], [0, -1], [1, 0], [0, 1]];
+    const previousMoves = computerRecord.moves;
+    const lastHitPosition = previousMoves[computerRecord.lastHitIndex];
+    let availableMove;
+    for (let i = 0; i < possiblePos.length; ++i) {
+        const tempPosition = [lastHitPosition[0] + possiblePos[i][0], lastHitPosition[1] + possiblePos[i][1]];
+        if ((tempPosition[0] < 0 || tempPosition[0] > size) || (tempPosition[1] < 0 || tempPosition[1] > size))
+            continue;
+        availableMove = true;
+        previousMoves.forEach((positionVisited) => {
+            if (tempPosition[0] === positionVisited[0] && tempPosition[1] === positionVisited[1]) {
+                availableMove = false;
+                return;
+            }
+        });
+        if (i === possiblePos.length - 1)
+            computerRecord.searching = false;
+        if (availableMove)
+            return tempPosition;
+    }
+    return -1;
+}
+
+function computerPlaysRandom(size) {
     // it just return some random coordinates
     const x = Math.floor(Math.random() * size);
     const y = Math.floor(Math.random() * size);
