@@ -290,9 +290,9 @@ function createEvents(playersArr, flagComputer, numberOfShips, isRandom = false)
     const divBoards = document.querySelectorAll('div.board');
     let turn = 0;
     let computerIsPlaying = false;
-    divBoards[1].addEventListener('mouseup', assignEventListener);
     const divBoardChildrenArray = [...divBoards[1].children];
     divBoardChildrenArray.forEach((cell) => {
+        cell.addEventListener('mouseup', assignEventListener);
         cell.addEventListener('mouseenter', () => {
             highlightAxis(cell, divBoardChildrenArray, true);
         });
