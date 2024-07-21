@@ -262,6 +262,26 @@ function removeAllButtons() {
         buttonsDiv.children[0].remove();
 }
 
+function highlightAxis(cellEvent, boardArray, flag) {
+    const row = cellEvent.dataset.row;
+    const column = cellEvent.dataset.column;
+    boardArray.forEach((cell) => {
+        if (cell.dataset.row === row || cell.dataset.column === column) {
+            if (flag) {
+                if (cell.classList.contains('hit') || cell.classList.contains('no-hit'))
+                    cell.style.opacity = 0.3;
+                else
+                    cell.classList.add('highlight-target');
+            }
+            else {
+                cell.classList.remove('highlight-target');
+                if (cell.classList.contains('hit') || cell.classList.contains('no-hit'))
+                    cell.style.opacity = 1;
+            }
+        }
+    });
+}
+
 function createEvents(playersArr, flagComputer, numberOfShips, isRandom = false) {
     const gameRecord = createGameRecord();
     // We associate each player with a board;
@@ -271,6 +291,15 @@ function createEvents(playersArr, flagComputer, numberOfShips, isRandom = false)
     let turn = 0;
     let computerIsPlaying = false;
     divBoards[1].addEventListener('mouseup', assignEventListener);
+    const divBoardChildrenArray = [...divBoards[1].children];
+    divBoardChildrenArray.forEach((cell) => {
+        cell.addEventListener('mouseenter', () => {
+            highlightAxis(cell, divBoardChildrenArray, true);
+        });
+        cell.addEventListener('mouseleave', () => {
+            highlightAxis(cell, divBoardChildrenArray, false);
+        });
+    });
     if (flagComputer === false)
         divBoards[0].addEventListener('mouseup', assignEventListener);
 

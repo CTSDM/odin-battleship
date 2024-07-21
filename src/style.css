@@ -90,3 +90,8 @@ body {
     background: lightblue;
     gap: 20px;
 }
+
+.highlight-target {
+    background-color: blue;
+    opacity: 0.3;
+}
