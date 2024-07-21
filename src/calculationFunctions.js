@@ -162,7 +162,7 @@ function getNearbyCoordinates(size, computerRecord) {
     let availableMove;
     for (let i = 0; i < possiblePos.length; ++i) {
         const tempPosition = [lastHitPosition[0] + possiblePos[i][0], lastHitPosition[1] + possiblePos[i][1]];
-        if ((tempPosition[0] < 0 || tempPosition[0] > size) || (tempPosition[1] < 0 || tempPosition[1] > size))
+        if ((tempPosition[0] < 0 || tempPosition[0] > size - 1) || (tempPosition[1] < 0 || tempPosition[1] > size - 1))
             continue;
         availableMove = true;
         previousMoves.forEach((positionVisited) => {
