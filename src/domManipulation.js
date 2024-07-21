@@ -324,10 +324,8 @@ function createEvents(playersArr, flagComputer, numberOfShips, isRandom = false)
         let checkValid = checkValidPosition(playersArr, turn, row, column);
         if (checkValid && computerIsPlaying === false) {
             const shipHit = registerHit(playersArr, turn, row, column, event.target, gameRecord[turn]);
-            if (shipHit && isShipSunk(playersArr[turn].gameboard, row, column)) {
-                console.log('drawing stufff');
+            if (shipHit && isShipSunk(playersArr[turn].gameboard, row, column))
                 drawShipSunk(playersArr, row, column, turn);
-            }
             gameRecord[turn].moves.push([row, column]);
             turn = (turn === 0) ? 1 : 0;
             if (playersArr[turn ? 0 : 1].gameboard.areShipsLeft() === false) {
@@ -347,7 +345,9 @@ function createEvents(playersArr, flagComputer, numberOfShips, isRandom = false)
                     let checkValid = checkValidPosition(playersArr, turn, row, column);
                     if (checkValid) {
                         gameRecord[turn].moves.push([row, column]);
-                        registerHit(playersArr, turn, row, column, cell, gameRecord[turn]);
+                        const shipHit = registerHit(playersArr, turn, row, column, cell, gameRecord[turn]);
+                        if (shipHit && isShipSunk(playersArr[turn].gameboard, row, column))
+                            drawShipSunk(playersArr, row, column, turn);
                         turn = (turn === 0 ? 1 : 0);
                     } else
                         continue;
