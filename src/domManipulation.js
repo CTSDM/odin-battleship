@@ -2,10 +2,10 @@ import imageShip1 from "./images/smallShip.png";
 import { shipsLeft, isValidShipPosition, getBoardSize, getNewShipPosition, shipCollision, computerPlays, getRandomCoordinates } from "./calculationFunctions";
 import { addShipToPlayer, createGameRecord } from "./objectsModification";
 import { setUpPlayerName } from "./usernameDOM.js";
+import { getSunkShipPositions, isShipSunk } from "./auxFunctions.js";
 
 const IMAGES_SHIPS = imageShip1;
 import Player from './player'
-import Gameboard from "./gameboard.js";
 
 export default function createBoard(size, numberOfShips) {
     loadGrid(size);
@@ -285,6 +285,22 @@ function highlightAxis(event) {
     });
 }
 
+function drawShipSunk(playersArr, row, column, turn) {
+    const gameboardObject = playersArr[turn].gameboard;
+    const shipSunkCoordinates = getSunkShipPositions(gameboardObject, row, column);
+    const gameboardDivOpponent = document.querySelectorAll('.board');
+    const indexOpponent = turn ? 0 : 1;
+    const gameboardArrOpponent = [...gameboardDivOpponent[indexOpponent].children];
+    shipSunkCoordinates.forEach((coordinate) => {
+        gameboardArrOpponent.forEach((cell) => {
+            if (+cell.dataset.row === coordinate[0] && +cell.dataset.column === coordinate[1]) {
+                cell.classList.add('sunk');
+                return
+            }
+        });
+    });
+}
+
 function createEvents(playersArr, flagComputer, numberOfShips, isRandom = false) {
     const gameRecord = createGameRecord();
     // We associate each player with a board;
@@ -307,7 +323,11 @@ function createEvents(playersArr, flagComputer, numberOfShips, isRandom = false)
         const column = event.target.dataset.column;
         let checkValid = checkValidPosition(playersArr, turn, row, column);
         if (checkValid && computerIsPlaying === false) {
-            registerHit(playersArr, turn, row, column, event.target, gameRecord[turn]);
+            const shipHit = registerHit(playersArr, turn, row, column, event.target, gameRecord[turn]);
+            if (shipHit && isShipSunk(playersArr[turn].gameboard, row, column)) {
+                console.log('drawing stufff');
+                drawShipSunk(playersArr, row, column, turn);
+            }
             gameRecord[turn].moves.push([row, column]);
             turn = (turn === 0) ? 1 : 0;
             if (playersArr[turn ? 0 : 1].gameboard.areShipsLeft() === false) {
@@ -339,7 +359,7 @@ function createEvents(playersArr, flagComputer, numberOfShips, isRandom = false)
                 }
                 computerIsPlaying = false;
                 enableComputerThinkingDiv(false);
-            }, 1000);
+            }, 10);
         }
     }
 
@@ -412,8 +432,10 @@ function createPlayButtons(container) {
 }
 
 function registerHit(playersArr, turn, row, column, cell, player) {
+    let shipWasHit = false;
     playersArr[turn].gameboard.receiveAttack([row, column]);
     if (playersArr[turn].gameboard.positionsVisited[row][column] === true) {
+        shipWasHit = true;
         cell.classList.add('hit');
         cell.classList.remove('highlight-target');
         player.hits.push(true);
@@ -427,6 +449,7 @@ function registerHit(playersArr, turn, row, column, cell, player) {
         cell.classList.remove('highlight-target');
         player.hits.push(false);
     }
+    return shipWasHit;
 }
 
 function checkValidPosition(playersArr, turn, row, column) {

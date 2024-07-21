@@ -8,6 +8,10 @@ export default class Ship {
         this.#length -= 1;
     }
 
+    get length() {
+        return this.#length;
+    }
+
     isSunk() {
         return this.#length === 0 ? true : false;
     }

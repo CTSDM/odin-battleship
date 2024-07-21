@@ -19,8 +19,10 @@ export default class Gameboard {
             return false;
         // We assume the ships are completely straight
         // The first element of position is the most left/bottom
-        let shipLength = (position.slice(-1)[1] - position[0][1]) || (position.slice(-1)[0] - position[0][0]);
-        const newShip = new Ship(shipLength);
+        const xLength = position[position.length - 1][0] - position[0][0];
+        const yLength = position[position.length - 1][1] - position[0][1];
+        let shipLength = Math.abs(xLength || yLength);
+        const newShip = new Ship(shipLength + 1);
         position.forEach((coordinate) => {
             this.map[coordinate[0]][coordinate[1]] = newShip;
         });
