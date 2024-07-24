@@ -143,8 +143,12 @@ export function computerPlays(size, computerPlayRecord, isRandom) {
     if (isRandom) {
         return computerPlaysRandom(size);
     }
-    if (computerPlayRecord.searching === false)
-        return computerPlaysRandom(size);
+    if (computerPlayRecord.searching === false) {
+        if (computerPlayRecord.nonSunkShipsHitPosition.length > 0)
+            return getNearbyCoordinatesOld(size, computerPlayRecord);
+        else
+            return computerPlaysRandom(size);
+    }
     else {
         const newCords = getNearbyCoordinates(size, computerPlayRecord);
         if (newCords === -1)
@@ -152,6 +156,32 @@ export function computerPlays(size, computerPlayRecord, isRandom) {
         else
             return newCords;
     }
+}
+
+function getNearbyCoordinatesOld(size, computerRecord) {
+    const possiblePos = [[-1, 0], [0, -1], [1, 0], [0, 1]];
+    const previousMoves = computerRecord.moves;
+    let availableMove;
+    for (let j = 0; j < computerRecord.nonSunkShipsHitPosition.length; ++j) {
+        const lastHitPosition = computerRecord.nonSunkShipsHitPosition[j];
+        for (let i = 0; i < possiblePos.length; ++i) {
+            const tempPosition = [lastHitPosition[0] + possiblePos[i][0], lastHitPosition[1] + possiblePos[i][1]];
+            if ((tempPosition[0] < 0 || tempPosition[0] > size - 1) || (tempPosition[1] < 0 || tempPosition[1] > size - 1))
+                continue;
+            availableMove = true;
+            previousMoves.forEach((positionVisited) => {
+                if (tempPosition[0] === positionVisited[0] && tempPosition[1] === positionVisited[1]) {
+                    availableMove = false;
+                    return;
+                }
+            });
+            if (i === possiblePos.length - 1)
+                computerRecord.searching = false;
+            if (availableMove)
+                return tempPosition;
+        }
+    }
+    return -1;
 }
 
 function getNearbyCoordinates(size, computerRecord) {

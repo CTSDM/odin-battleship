@@ -139,23 +139,17 @@ function setUpEventListenersShips(playersArr) {
                     colorPlayerShips(positions, 1);
                     // place the ship within the gameboard
                     // delete the image that is associated to the placed ship
-                    console.log('the ship can be placed');
                     shipContainer[indexShip].style.width = 0;
                     shipContainer[indexShip].style.height = 0;
                     // the condition below  means that all the ships have been placed correctly
                     if (shipsLeft(shipContainer)) {
                         placeShipsGameboard(playersArr[0], 0, shipContainer.length);
                         disableStartButton(false);
-                        console.log('no ships left');
                     }
-                } else {
-                    console.log('the ship cannot be placed...');
+                } else
                     restartImagePosition(shipContainer[indexShip]);
-                }
-            } else {
-                console.log('the ship cannot be placed...');
+            } else
                 restartImagePosition(shipContainer[indexShip]);
-            }
             indexShip = -1;
         }
     });
@@ -346,8 +340,13 @@ function createEvents(playersArr, flagComputer, numberOfShips, isRandom = false)
                     if (checkValid) {
                         gameRecord[turn].moves.push([row, column]);
                         const shipHit = registerHit(playersArr, turn, row, column, cell, gameRecord[turn]);
-                        if (shipHit && isShipSunk(playersArr[turn].gameboard, row, column))
-                            drawShipSunk(playersArr, row, column, turn);
+                        if (shipHit) {
+                            gameRecord[turn].nonSunkShipsHitPosition.push(coords);
+                            if (isShipSunk(playersArr[turn].gameboard, row, column)) {
+                                gameRecord[turn].removeSunkShip(getSunkShipPositions(playersArr[turn].gameboard, row, column));
+                                drawShipSunk(playersArr, row, column, turn);
+                            }
+                        }
                         turn = (turn === 0 ? 1 : 0);
                     } else
                         continue;
