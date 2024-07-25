@@ -99,3 +99,11 @@ body {
 .sunk {
     background-color: grey;
 }
+
+.traansition-selected-axis {
+    transition: 0.1s ease-in-out;
+}
+
+.selected-axis {
+    background-color: magenta;
+}

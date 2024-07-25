@@ -299,6 +299,30 @@ function drawShipSunk(playersArr, row, column, turn) {
     });
 }
 
+function blinkAxis(boardArray, row, column) {
+    const cellArr = [];
+    boardArray.forEach((cell) => {
+        if (+cell.dataset.row === +row || +cell.dataset.column === +column) {
+            cellArr.push(cell);
+        }
+    });
+    const delay = 1000; // ms
+    let repetitions = 5;
+    for (let indexRepetition = 0; indexRepetition - repetitions; ++indexRepetition) {
+        setTimeout(function() {
+            cellArr.forEach((cell) => {
+                cell.classList.add('transition-selected-axis');
+                cell.classList.add('selected-axis');
+                cell.classList.remove('highlight-target');
+                setTimeout(() => cell.classList.remove('selected-axis'), delay / repetitions / 2);
+            });
+        }, delay / repetitions * (indexRepetition - 1));
+    }
+    cellArr.forEach((cell) => {
+        setTimeout(() => cell.classList.remove('transition-selected-axis'), delay);
+    });
+}
+
 function createEvents(playersArr, flagComputer, numberOfShips, isRandom = false) {
     const gameRecord = createGameRecord();
     // We associate each player with a board;
@@ -322,6 +346,7 @@ function createEvents(playersArr, flagComputer, numberOfShips, isRandom = false)
         let checkValid = checkValidPosition(playersArr, turn, row, column);
         if (checkValid && computerIsPlaying === false) {
             const shipHit = registerHit(playersArr, turn, row, column, event.target, gameRecord[turn]);
+            blinkAxis(divBoardChildrenArray, row, column);
             if (shipHit && isShipSunk(playersArr[turn].gameboard, row, column))
                 drawShipSunk(playersArr, row, column, turn);
             gameRecord[turn].moves.push([row, column]);
@@ -345,6 +370,7 @@ function createEvents(playersArr, flagComputer, numberOfShips, isRandom = false)
                         gameRecord[turn].moves.push([row, column]);
                         const coordinatesToTravel = getLaunchingCoordinates([row, column], size);
                         const divBoardChildrenComputerArray = [...divBoards[0].children];
+                        let breakVar = false;
                         for (const [index, coordinates] of coordinatesToTravel.entries()) {
                             let cellIndex = 0;
                             let lastCell = undefined;
@@ -367,18 +393,22 @@ function createEvents(playersArr, flagComputer, numberOfShips, isRandom = false)
                                             highlightAxis(currentCell, true);
                                             lastCell = undefined;
                                             currentCell = undefined;
+                                            if (index === coordinatesToTravel.length - 1) {
+                                                setTimeout(function() {
+                                                    highlightAxis(divBoardChildrenComputerArray[coordinates[0] * 10 + coordinates[1]], false);
+                                                    computerIsPlaying = false;
+                                                    enableComputerThinkingDiv(false);
+                                                    blinkAxis(divBoardChildrenComputerArray, row, column);
+                                                }, 150);
+                                                breakVar = true;
+                                                return;
+                                            }
                                         }
-                                    }
-                                    if (index === coordinatesToTravel.length - 1) {
-                                        setTimeout(function() {
-                                            highlightAxis(divBoardChildrenComputerArray[coordinates[0] * 10 + coordinates[1]], false);
-                                            computerIsPlaying = false;
-                                            enableComputerThinkingDiv(false);
-                                            return;
-                                        }, 150);
                                     }
                                     ++cellIndex;
                                 }, 150 * (index + 1));
+                                if (breakVar)
+                                    break;
                             }
                         }
                         const shipHit = registerHit(playersArr, turn, row, column, cell, gameRecord[turn]);
