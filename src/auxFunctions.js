@@ -18,5 +18,43 @@ export function isShipSunk(gameboard, row, column) {
         return true
     else
         return false
-
 }
+
+export function getLaunchingCoordinates(coordinateToBeHit, boardSize) {
+    // In this function a semi random walk will be used to simulate 
+    // that the computers is choosing a position.
+    // It will start from one random corner and then circulate around until
+    // it arrives to the desired coordinate that was previously selected
+    // as the next hit
+    const cornersCoordinates = [[0, 0], [0, boardSize - 1], [boardSize - 1, 0], [boardSize - 1, boardSize - 1]];
+    const coordinatesToTravel = [];
+    while (true) {
+        const randomStart = cornersCoordinates[Math.floor(Math.random() * 4)];
+        if (randomStart[0] === coordinateToBeHit[0] && randomStart[1] === coordinateToBeHit[1])
+            continue
+        coordinatesToTravel.push(randomStart);
+        break;
+    }
+    let arrivedDestination = false;
+    let x = 0;
+    while (!arrivedDestination && x < 100) {
+        ++x;
+        const lastCoordinate = coordinatesToTravel[coordinatesToTravel.length - 1];
+        let randomAxis = Math.round(Math.random());
+        let otherAxis = Math.abs(randomAxis - 1);
+        const newCoordinate = [-1, -1];
+        if (lastCoordinate[randomAxis] > coordinateToBeHit[randomAxis])
+            newCoordinate[randomAxis] = lastCoordinate[randomAxis] - 1;
+        else if (lastCoordinate[randomAxis] < coordinateToBeHit[randomAxis])
+            newCoordinate[randomAxis] = lastCoordinate[randomAxis] + 1;
+        else
+            continue
+        newCoordinate[otherAxis] = lastCoordinate[otherAxis];
+        coordinatesToTravel.push(newCoordinate);
+        if (newCoordinate[0] === coordinateToBeHit[0] && newCoordinate[1] === coordinateToBeHit[1])
+            arrivedDestination = true;
+    }
+    return coordinatesToTravel;
+}
+
+
