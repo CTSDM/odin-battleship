@@ -37,20 +37,36 @@ export function getLaunchingCoordinates(coordinateToBeHit, boardSize) {
     }
     let arrivedDestination = false;
     let x = 0;
-    while (!arrivedDestination && x < 100) {
+    while (!arrivedDestination) {
         ++x;
         const lastCoordinate = coordinatesToTravel[coordinatesToTravel.length - 1];
+        const closerProbability = 0.8;
+        let getCloserFlag = Math.random() < closerProbability ? 1 : 0;
         let randomAxis = Math.round(Math.random());
         let otherAxis = Math.abs(randomAxis - 1);
-        const newCoordinate = [-1, -1];
-        if (lastCoordinate[randomAxis] > coordinateToBeHit[randomAxis])
-            newCoordinate[randomAxis] = lastCoordinate[randomAxis] - 1;
-        else if (lastCoordinate[randomAxis] < coordinateToBeHit[randomAxis])
-            newCoordinate[randomAxis] = lastCoordinate[randomAxis] + 1;
-        else
-            continue
-        newCoordinate[otherAxis] = lastCoordinate[otherAxis];
-        coordinatesToTravel.push(newCoordinate);
+        const newCoordinate = [lastCoordinate[0], lastCoordinate[1]];
+        if (!getCloserFlag && coordinatesToTravel.length < 20) {
+            while (true) {
+                let signDirection = Math.round(Math.random()) ? -1 : 1;
+                let newAxisPosition = lastCoordinate[randomAxis] + signDirection;
+                if (newAxisPosition < 0 || newAxisPosition > boardSize - 1)
+                    continue
+                newCoordinate[randomAxis] = newAxisPosition;
+                newCoordinate[otherAxis] = lastCoordinate[otherAxis];
+                coordinatesToTravel.push(newCoordinate);
+                break;
+            }
+        }
+        else {
+            if (lastCoordinate[randomAxis] > coordinateToBeHit[randomAxis])
+                newCoordinate[randomAxis] = lastCoordinate[randomAxis] - 1;
+            else if (lastCoordinate[randomAxis] < coordinateToBeHit[randomAxis])
+                newCoordinate[randomAxis] = lastCoordinate[randomAxis] + 1;
+            else
+                continue
+            newCoordinate[otherAxis] = lastCoordinate[otherAxis];
+            coordinatesToTravel.push(newCoordinate);
+        }
         if (newCoordinate[0] === coordinateToBeHit[0] && newCoordinate[1] === coordinateToBeHit[1])
             arrivedDestination = true;
     }
