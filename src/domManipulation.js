@@ -323,125 +323,153 @@ function blinkAxis(boardArray, row, column) {
     });
 }
 
-function createEvents(playersArr, flagComputer, numberOfShips, isRandom = false) {
+function createEvents(playersArr, flagComputer, numberOfShips) {
     const gameRecord = createGameRecord();
     // We associate each player with a board;
     // the function inside the event listener should not be an anonymous function
-    const size = getBoardSize(playersArr[0]);
     const divBoards = document.querySelectorAll('div.board');
-    let turn = 0;
-    let computerIsPlaying = false;
+    const gameSpace = {
+        turn: 0,
+        computerIsPlaying: false
+    };
     const divBoardChildrenArray = [...divBoards[1].children];
     divBoardChildrenArray.forEach((cell) => {
-        cell.addEventListener('mouseup', assignEventListener);
+        cell.addEventListener('mouseup', function clicked(e) {
+            // the cell will no longer be clickable once a hit is confirmed
+            const row = e.target.dataset.row;
+            const column = e.target.dataset.column;
+            if (gameSpace.computerIsPlaying === false && gameSpace.turn === 0) {
+                console.log(gameSpace.computerIsPlaying, gameSpace.turn);
+                if (isHit(row, column, playersArr, gameSpace.turn)) {
+                    handleHit(playersArr, gameSpace, row, column, e, gameRecord, divBoardChildrenArray, numberOfShips, flagComputer);
+                    cell.removeEventListener('mouseup', clicked);
+                    console.log(gameSpace.computerIsPlaying);
+                }
+            }
+            //assignEventListener(e, playersArr, turn, computerIsPlaying, divBoardChildrenArray, numberOfShips, gameRecord, size, flagComputer);
+        });
         cell.addEventListener('mouseenter', highlightAxisEvent);
         cell.addEventListener('mouseleave', highlightAxisEvent);
         if (flagComputer === false)
             divBoards[0].addEventListener('mouseup', assignEventListener);
     });
+}
 
-    function assignEventListener(event) {
-        const row = event.target.dataset.row;
-        const column = event.target.dataset.column;
-        let checkValid = checkValidPosition(playersArr, turn, row, column);
-        if (checkValid && computerIsPlaying === false) {
-            const shipHit = registerHit(playersArr, turn, row, column, event.target, gameRecord[turn]);
-            blinkAxis(divBoardChildrenArray, row, column);
-            if (shipHit && isShipSunk(playersArr[turn].gameboard, row, column))
-                drawShipSunk(playersArr, row, column, turn);
-            gameRecord[turn].moves.push([row, column]);
-            turn = (turn === 0) ? 1 : 0;
-            if (playersArr[turn ? 0 : 1].gameboard.areShipsLeft() === false) {
-                disableEventListeners();
-                endGame(turn, playersArr, numberOfShips);
-                return;
-            }
-        }
-        if (flagComputer === true && turn === 1 && computerIsPlaying === false) {
-            computerIsPlaying = true;
-            enableComputerThinkingDiv(true);
-            setTimeout(function() {
-                while (true) {
-                    const coords = computerPlays(playersArr[1].gameboard.map.length, gameRecord[turn], isRandom);
-                    const row = coords[0], column = coords[1];
-                    const cell = divBoards[0].children[row * size + column];
-                    let checkValid = checkValidPosition(playersArr, turn, row, column);
-                    if (checkValid) {
-                        gameRecord[turn].moves.push([row, column]);
-                        const coordinatesToTravel = getLaunchingCoordinates([row, column], size);
-                        const divBoardChildrenComputerArray = [...divBoards[0].children];
-                        let breakVar = false;
-                        for (const [index, coordinates] of coordinatesToTravel.entries()) {
-                            let cellIndex = 0;
-                            let lastCell = undefined;
-                            let currentCell = undefined;
-                            for (let nIter = 0; nIter < divBoardChildrenComputerArray.length; ++nIter) {
-                                setTimeout(function() {
-                                    const cellIter = divBoardChildrenComputerArray[cellIndex];
-                                    if (index > 0 && lastCell === undefined) {
-                                        if (+cellIter.dataset.row === coordinatesToTravel[index - 1][0] && +cellIter.dataset.column === coordinatesToTravel[index - 1][1])
-                                            lastCell = cellIter;
-                                    }
-                                    if (+cellIter.dataset.row === coordinates[0] && +cellIter.dataset.column === coordinates[1]) {
-                                        currentCell = cellIter;
-                                    }
-                                    if (index === 0 && currentCell !== undefined)
+function handleHit(playersArr, gameSpace, row, column, e, gameRecord, divBoardChildrenArray, numberOfShips, flagComputer) {
+    // disable highlightAxisEvent
+    divBoardChildrenArray.forEach((cell) => {
+        cell.removeEventListener('mouseenter', highlightAxisEvent);
+        cell.removeEventListener('mouseleave', highlightAxisEvent);
+    });
+    blinkAxis(divBoardChildrenArray, row, column);
+    const shipHit = registerHit(playersArr, gameSpace.turn, row, column, e.target, gameRecord[gameSpace.turn]);
+    if (shipHit && isShipSunk(playersArr[gameSpace.turn].gameboard, row, column))
+        drawShipSunk(playersArr, row, column, gameSpace.turn);
+    gameRecord[gameSpace.turn].moves.push([row, column]);
+    // the change of turn and endgame need to happen after a certain period of time
+    gameSpace.turn = 1;
+    if (playersArr[gameSpace.turn ? 0 : 1].gameboard.areShipsLeft() === false) {
+        disableEventListeners();
+        endGame(gameSpace.turn, playersArr, numberOfShips);
+    }
+    computerTurn(flagComputer, gameSpace, playersArr, gameRecord, divBoardChildrenArray);
+}
+
+function isHit(row, column, playersArr, turn) {
+    return checkValidPosition(playersArr, turn, row, column);
+}
+
+function disableEventListeners() {
+    const divBoards = document.querySelectorAll('div.board');
+    const divBoardChildrenArray = [...divBoards[1].children];
+    divBoardChildrenArray.forEach((cell) => {
+        cell.removeEventListener('mouseup', assignEventListener);
+        cell.removeEventListener('mouseenter', highlightAxisEvent);
+        cell.removeEventListener('mouseleave', highlightAxisEvent);
+        cell.style.opacity = 1;
+        cell.classList.remove('highlight-target');
+    });
+}
+
+function computerTurn(flagComputer, gameSpace, playersArr, gameRecord, divBoardChildrenArray, isRandom = false) {
+    if (flagComputer === true && gameSpace.turn === 1 && gameSpace.computerIsPlaying === false) {
+        const divBoards = document.querySelectorAll('div.board');
+        const size = getBoardSize(playersArr[0]);
+        gameSpace.computerIsPlaying = true;
+        enableComputerThinkingDiv(true);
+        setTimeout(function() {
+            while (true) {
+                const [row, column] = computerPlays(playersArr[1].gameboard.map.length, gameRecord[gameSpace.turn], isRandom);
+                if (checkValidPosition(playersArr, gameSpace.turn, row, column)) {
+                    gameRecord[gameSpace.turn].moves.push([row, column]);
+                    const coordinatesToTravel = getLaunchingCoordinates([row, column], size);
+                    const divBoardChildrenComputerArray = [...divBoards[0].children];
+                    let breakVar = false;
+                    for (const [index, coordinates] of coordinatesToTravel.entries()) {
+                        let cellIndex = 0;
+                        let lastCell = undefined, currentCell = undefined;
+                        for (let nIter = 0; nIter < divBoardChildrenComputerArray.length; ++nIter) {
+                            setTimeout(function() {
+                                const cellIter = divBoardChildrenComputerArray[cellIndex];
+                                if (index > 0 && lastCell === undefined) {
+                                    if (+cellIter.dataset.row === coordinatesToTravel[index - 1][0] && +cellIter.dataset.column === coordinatesToTravel[index - 1][1])
+                                        lastCell = cellIter;
+                                }
+                                if (+cellIter.dataset.row === coordinates[0] && +cellIter.dataset.column === coordinates[1]) {
+                                    currentCell = cellIter;
+                                }
+                                if (index === 0 && currentCell !== undefined)
+                                    highlightAxis(currentCell, true);
+                                else {
+                                    if (currentCell !== undefined && lastCell !== undefined) {
+                                        highlightAxis(lastCell, false);
                                         highlightAxis(currentCell, true);
-                                    else {
-                                        if (currentCell !== undefined && lastCell !== undefined) {
-                                            highlightAxis(lastCell, false);
-                                            highlightAxis(currentCell, true);
-                                            lastCell = undefined;
-                                            currentCell = undefined;
-                                            if (index === coordinatesToTravel.length - 1) {
-                                                setTimeout(function() {
-                                                    highlightAxis(divBoardChildrenComputerArray[coordinates[0] * 10 + coordinates[1]], false);
-                                                    computerIsPlaying = false;
-                                                    enableComputerThinkingDiv(false);
-                                                    blinkAxis(divBoardChildrenComputerArray, row, column);
-                                                }, 150);
-                                                breakVar = true;
-                                                return;
-                                            }
+                                        lastCell = undefined;
+                                        currentCell = undefined;
+                                        if (index === coordinatesToTravel.length - 1) {
+                                            setTimeout(function() {
+                                                highlightAxis(divBoardChildrenComputerArray[coordinates[0] * 10 + coordinates[1]], false);
+                                                gameSpace.computerIsPlaying = false;
+                                                gameSpace.turn = (gameSpace.turn === 0 ? 1 : 0);
+                                                enableComputerThinkingDiv(false);
+                                                blinkAxis(divBoardChildrenComputerArray, row, column);
+                                                divBoardChildrenArray.forEach((cell) => {
+                                                    cell.addEventListener('mouseenter', highlightAxisEvent);
+                                                    cell.addEventListener('mouseleave', highlightAxisEvent);
+                                                });
+                                            }, 150);
+                                            breakVar = true;
+                                            return;
                                         }
                                     }
-                                    ++cellIndex;
-                                }, 150 * (index + 1));
-                                if (breakVar)
-                                    break;
-                            }
+                                }
+                                ++cellIndex;
+                            }, 150 * (index + 1));
+                            if (breakVar)
+                                break;
                         }
-                        const shipHit = registerHit(playersArr, turn, row, column, cell, gameRecord[turn]);
-                        if (shipHit) {
-                            gameRecord[turn].nonSunkShipsHitPosition.push(coords);
+                    }
+                    const cell = divBoards[0].children[row * size + column];
+                    const turn = gameSpace.turn;
+                    setTimeout(function() {
+                        if (registerHit(playersArr, turn, row, column, cell, gameRecord[turn])) {
+                            gameRecord[turn].nonSunkShipsHitPosition.push([row, column]);
                             if (isShipSunk(playersArr[turn].gameboard, row, column)) {
                                 gameRecord[turn].removeSunkShip(getSunkShipPositions(playersArr[turn].gameboard, row, column));
                                 drawShipSunk(playersArr, row, column, turn);
                             }
+                            console.log(coordinatesToTravel.length);
                         }
-                        turn = (turn === 0 ? 1 : 0);
-                    } else
-                        continue;
-                    break;
-                }
-                if (playersArr[turn ? 0 : 1].gameboard.areShipsLeft() === false) {
-                    disableEventListeners();
-                    endGame(turn, playersArr, numberOfShips);
-                }
-            }, 10);
+                    }, 150 * (coordinatesToTravel.length + 1));
+                } else
+                    continue;
+                break;
+            }
+        }, 1000);
+        if (playersArr[gameSpace.turn ? 0 : 1].gameboard.areShipsLeft() === false) {
+            disableEventListeners();
+            endGame(gameSpace.turn, playersArr, numberOfShips);
         }
-    }
-
-    function disableEventListeners() {
-        const divBoards = document.querySelectorAll('div.board');
-        const divBoardChildrenArray = [...divBoards[1].children];
-        divBoardChildrenArray.forEach((cell) => {
-            cell.removeEventListener('mouseup', assignEventListener);
-            cell.removeEventListener('mouseenter', highlightAxisEvent);
-            cell.removeEventListener('mouseleave', highlightAxisEvent);
-            cell.style.opacity = 1;
-            cell.classList.remove('highlight-target');
-        });
     }
 }
 
