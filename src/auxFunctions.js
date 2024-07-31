@@ -73,4 +73,9 @@ export function getLaunchingCoordinates(coordinateToBeHit, boardSize) {
     return coordinatesToTravel;
 }
 
-
+export function checkValidPosition(playersArr, turn, row, column) {
+    if (playersArr[turn].gameboard.positionsVisited[row][column] === undefined)
+        return true
+    else
+        return false
+}

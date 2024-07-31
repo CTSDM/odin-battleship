@@ -1,3 +1,5 @@
+import Player from './player'
+
 export function addShipToPlayer(player, positions) {
     player.gameboard.addShip(positions);
 }
@@ -26,4 +28,12 @@ export function createGameRecord() {
     };
 
     return [human, computer];
+}
+
+export function createPlayers(players, size) {
+    players.splice(0, players.length);
+    const playerOne = new Player(size);
+    const playerTwo = new Player(size);
+    players.push(playerOne);
+    players.push(playerTwo);
 }

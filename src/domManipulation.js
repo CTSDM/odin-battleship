@@ -1,11 +1,10 @@
 import imageShip1 from "./images/smallShip.png";
 import { shipsLeft, isValidShipPosition, getBoardSize, getNewShipPosition, shipCollision, computerPlays, getRandomCoordinates } from "./calculationFunctions";
-import { addShipToPlayer, createGameRecord } from "./objectsModification";
+import { addShipToPlayer, createGameRecord, createPlayers } from "./objectsModification";
 import { setUpPlayerName } from "./usernameDOM.js";
-import { getSunkShipPositions, isShipSunk, getLaunchingCoordinates } from "./auxFunctions.js";
+import { getSunkShipPositions, isShipSunk, getLaunchingCoordinates, checkValidPosition } from "./auxFunctions.js";
 
 const IMAGES_SHIPS = imageShip1;
-import Player from './player'
 
 export default function createBoard(size, numberOfShips) {
     loadGrid(size);
@@ -233,13 +232,6 @@ function loadGrid(size) {
     });
 }
 
-function createPlayers(players, size) {
-    players.splice(0, players.length);
-    const playerOne = new Player(size);
-    const playerTwo = new Player(size);
-    players.push(playerOne);
-    players.push(playerTwo);
-}
 
 function startGame(players, computer, nShips) {
     const startGameButton = document.getElementById('start-game');
@@ -256,7 +248,7 @@ function removeAllButtons() {
         buttonsDiv.children[0].remove();
 }
 
-function highlightAxis(cellIni, flagEnable) {
+function highlightAxis(cellIni, flagEnable = true) {
     const board = cellIni.parentElement;
     const boardArray = [...board.children];
     const row = cellIni.dataset.row;
@@ -264,15 +256,11 @@ function highlightAxis(cellIni, flagEnable) {
     boardArray.forEach((cell) => {
         if (cell.dataset.row === row || cell.dataset.column === column) {
             if (flagEnable) {
-                if (cell.classList.contains('hit') || cell.classList.contains('no-hit'))
-                    cell.style.opacity = 0.3;
-                else
+                if (cell.classList.contains('hit') === false && cell.classList.contains('no-hit') === false)
                     cell.classList.add('highlight-target');
             }
             else {
                 cell.classList.remove('highlight-target');
-                if (cell.classList.contains('hit') || cell.classList.contains('no-hit'))
-                    cell.style.opacity = 1;
             }
         }
     });
@@ -299,28 +287,21 @@ function drawShipSunk(playersArr, row, column, turn) {
     });
 }
 
-function blinkAxis(boardArray, row, column) {
-    const cellArr = [];
-    boardArray.forEach((cell) => {
-        if (+cell.dataset.row === +row || +cell.dataset.column === +column) {
-            cellArr.push(cell);
-        }
-    });
-    const delay = 1000; // ms
+function blinkTarget(cellArray, row, column) {
+    const size = Math.sqrt(cellArray.length);
+    const cell = cellArray[column + row * size];
+    const delay = 1000;
+    // ms
     let repetitions = 5;
     for (let indexRepetition = 0; indexRepetition - repetitions; ++indexRepetition) {
         setTimeout(function() {
-            cellArr.forEach((cell) => {
-                cell.classList.add('transition-selected-axis');
-                cell.classList.add('selected-axis');
-                cell.classList.remove('highlight-target');
-                setTimeout(() => cell.classList.remove('selected-axis'), delay / repetitions / 2);
-            });
+            cell.classList.add('transition-selected-axis');
+            cell.classList.add('selected-axis');
+            cell.classList.remove('highlight-target');
+            setTimeout(() => cell.classList.remove('selected-axis'), delay / repetitions / 2);
         }, delay / repetitions * (indexRepetition - 1));
     }
-    cellArr.forEach((cell) => {
-        setTimeout(() => cell.classList.remove('transition-selected-axis'), delay);
-    });
+    setTimeout(() => cell.classList.remove('transition-selected-axis'), delay);
 }
 
 function createEvents(playersArr, flagComputer, numberOfShips) {
@@ -334,121 +315,99 @@ function createEvents(playersArr, flagComputer, numberOfShips) {
     };
     const divBoardChildrenArray = [...divBoards[1].children];
     divBoardChildrenArray.forEach((cell) => {
-        cell.addEventListener('mouseup', function clicked(e) {
-            // the cell will no longer be clickable once a hit is confirmed
-            const row = e.target.dataset.row;
-            const column = e.target.dataset.column;
-            if (gameSpace.computerIsPlaying === false && gameSpace.turn === 0) {
-                console.log(gameSpace.computerIsPlaying, gameSpace.turn);
-                if (isHit(row, column, playersArr, gameSpace.turn)) {
-                    handleHit(playersArr, gameSpace, row, column, e, gameRecord, divBoardChildrenArray, numberOfShips, flagComputer);
-                    cell.removeEventListener('mouseup', clicked);
-                    console.log(gameSpace.computerIsPlaying);
-                }
-            }
-            //assignEventListener(e, playersArr, turn, computerIsPlaying, divBoardChildrenArray, numberOfShips, gameRecord, size, flagComputer);
-        });
+        cell.addEventListener('mouseup', clicked);
         cell.addEventListener('mouseenter', highlightAxisEvent);
         cell.addEventListener('mouseleave', highlightAxisEvent);
-        if (flagComputer === false)
-            divBoards[0].addEventListener('mouseup', assignEventListener);
     });
+    function clicked(e) {
+        const cell = e.target;
+        const row = +e.target.dataset.row;
+        const column = +e.target.dataset.column;
+        if (gameSpace.computerIsPlaying === false && gameSpace.turn === 0) {
+            if (checkValidPosition(playersArr, gameSpace.turn, row, column))
+                handleHit(playersArr, gameSpace, row, column, e, gameRecord, divBoardChildrenArray, numberOfShips, flagComputer, clicked);
+            cell.removeEventListener('mouseup', clicked);
+        }
+    }
 }
 
-function handleHit(playersArr, gameSpace, row, column, e, gameRecord, divBoardChildrenArray, numberOfShips, flagComputer) {
+function handleHit(playersArr, gameSpace, row, column, e, gameRecord, divBoardChildrenArray, numberOfShips, flagComputer, clickedEventFunction) {
     // disable highlightAxisEvent
+    highlightAxis(divBoardChildrenArray[column + row * Math.sqrt(divBoardChildrenArray.length)], false);
     divBoardChildrenArray.forEach((cell) => {
         cell.removeEventListener('mouseenter', highlightAxisEvent);
         cell.removeEventListener('mouseleave', highlightAxisEvent);
     });
-    blinkAxis(divBoardChildrenArray, row, column);
+    blinkTarget(divBoardChildrenArray, row, column);
     const shipHit = registerHit(playersArr, gameSpace.turn, row, column, e.target, gameRecord[gameSpace.turn]);
     if (shipHit && isShipSunk(playersArr[gameSpace.turn].gameboard, row, column))
         drawShipSunk(playersArr, row, column, gameSpace.turn);
     gameRecord[gameSpace.turn].moves.push([row, column]);
-    // the change of turn and endgame need to happen after a certain period of time
     gameSpace.turn = 1;
-    if (playersArr[gameSpace.turn ? 0 : 1].gameboard.areShipsLeft() === false) {
-        disableEventListeners();
+    if (playersArr[0].gameboard.areShipsLeft() === false) {
+        disableEventListeners(clickedEventFunction);
         endGame(gameSpace.turn, playersArr, numberOfShips);
-    }
-    computerTurn(flagComputer, gameSpace, playersArr, gameRecord, divBoardChildrenArray);
+    } else
+        computerTurn(flagComputer, gameSpace, playersArr, gameRecord, divBoardChildrenArray, numberOfShips, clickedEventFunction);
 }
 
-function isHit(row, column, playersArr, turn) {
-    return checkValidPosition(playersArr, turn, row, column);
-}
-
-function disableEventListeners() {
+function disableEventListeners(eventFunction) {
     const divBoards = document.querySelectorAll('div.board');
     const divBoardChildrenArray = [...divBoards[1].children];
     divBoardChildrenArray.forEach((cell) => {
-        cell.removeEventListener('mouseup', assignEventListener);
+        cell.removeEventListener('mouseup', eventFunction);
         cell.removeEventListener('mouseenter', highlightAxisEvent);
         cell.removeEventListener('mouseleave', highlightAxisEvent);
-        cell.style.opacity = 1;
         cell.classList.remove('highlight-target');
     });
 }
 
-function computerTurn(flagComputer, gameSpace, playersArr, gameRecord, divBoardChildrenArray, isRandom = false) {
+function simplerLoops(coordinatesToTravel, cellArray, delay) {
+    const size = Math.sqrt(cellArray.length);
+    coordinatesToTravel.forEach((coordinate, index) => {
+        setTimeout(function() {
+            if (index > 0)
+                highlightAxis(cellArray[coordinatesToTravel[index - 1][1] + coordinatesToTravel[index - 1][0] * size], false);
+            highlightAxis(cellArray[coordinate[1] + coordinate[0] * size]);
+            if (index === coordinatesToTravel.length - 1) {
+                setTimeout(function() {
+                    highlightAxis(cellArray[coordinate[1] + coordinate[0] * size], false);
+                    blinkTarget(cellArray, coordinate[0], coordinate[1]);
+                }, delay);
+            }
+        }, delay * index);
+    }
+    );
+}
+
+function computerTurn(flagComputer, gameSpace, playersArr, gameRecord, divBoardChildrenArray, numberOfShips, clickedEventFunction, isRandom = false) {
     if (flagComputer === true && gameSpace.turn === 1 && gameSpace.computerIsPlaying === false) {
         const divBoards = document.querySelectorAll('div.board');
         const size = getBoardSize(playersArr[0]);
         gameSpace.computerIsPlaying = true;
         enableComputerThinkingDiv(true);
+        const programmableDelay = 10;
+        let validPosition = false;
         setTimeout(function() {
-            while (true) {
+            while (validPosition === false) {
                 const [row, column] = computerPlays(playersArr[1].gameboard.map.length, gameRecord[gameSpace.turn], isRandom);
-                if (checkValidPosition(playersArr, gameSpace.turn, row, column)) {
+                validPosition = checkValidPosition(playersArr, gameSpace.turn, row, column)
+                if (validPosition) {
                     gameRecord[gameSpace.turn].moves.push([row, column]);
                     const coordinatesToTravel = getLaunchingCoordinates([row, column], size);
                     const divBoardChildrenComputerArray = [...divBoards[0].children];
-                    let breakVar = false;
-                    for (const [index, coordinates] of coordinatesToTravel.entries()) {
-                        let cellIndex = 0;
-                        let lastCell = undefined, currentCell = undefined;
-                        for (let nIter = 0; nIter < divBoardChildrenComputerArray.length; ++nIter) {
-                            setTimeout(function() {
-                                const cellIter = divBoardChildrenComputerArray[cellIndex];
-                                if (index > 0 && lastCell === undefined) {
-                                    if (+cellIter.dataset.row === coordinatesToTravel[index - 1][0] && +cellIter.dataset.column === coordinatesToTravel[index - 1][1])
-                                        lastCell = cellIter;
-                                }
-                                if (+cellIter.dataset.row === coordinates[0] && +cellIter.dataset.column === coordinates[1]) {
-                                    currentCell = cellIter;
-                                }
-                                if (index === 0 && currentCell !== undefined)
-                                    highlightAxis(currentCell, true);
-                                else {
-                                    if (currentCell !== undefined && lastCell !== undefined) {
-                                        highlightAxis(lastCell, false);
-                                        highlightAxis(currentCell, true);
-                                        lastCell = undefined;
-                                        currentCell = undefined;
-                                        if (index === coordinatesToTravel.length - 1) {
-                                            setTimeout(function() {
-                                                highlightAxis(divBoardChildrenComputerArray[coordinates[0] * 10 + coordinates[1]], false);
-                                                gameSpace.computerIsPlaying = false;
-                                                gameSpace.turn = (gameSpace.turn === 0 ? 1 : 0);
-                                                enableComputerThinkingDiv(false);
-                                                blinkAxis(divBoardChildrenComputerArray, row, column);
-                                                divBoardChildrenArray.forEach((cell) => {
-                                                    cell.addEventListener('mouseenter', highlightAxisEvent);
-                                                    cell.addEventListener('mouseleave', highlightAxisEvent);
-                                                });
-                                            }, 150);
-                                            breakVar = true;
-                                            return;
-                                        }
-                                    }
-                                }
-                                ++cellIndex;
-                            }, 150 * (index + 1));
-                            if (breakVar)
-                                break;
+                    simplerLoops(coordinatesToTravel, divBoardChildrenComputerArray, programmableDelay);
+                    setTimeout(function() {
+                        gameSpace.computerIsPlaying = false;
+                        gameSpace.turn = (gameSpace.turn === 0 ? 1 : 0);
+                        enableComputerThinkingDiv(false);
+                        blinkTarget(divBoardChildrenComputerArray, row, column);
+                        divBoardChildrenArray.forEach((cell) => {
+                            cell.addEventListener('mouseenter', highlightAxisEvent);
+                            cell.addEventListener('mouseleave', highlightAxisEvent);
                         }
-                    }
+                        );
+                    }, programmableDelay * coordinatesToTravel.length + 1);
                     const cell = divBoards[0].children[row * size + column];
                     const turn = gameSpace.turn;
                     setTimeout(function() {
@@ -458,18 +417,15 @@ function computerTurn(flagComputer, gameSpace, playersArr, gameRecord, divBoardC
                                 gameRecord[turn].removeSunkShip(getSunkShipPositions(playersArr[turn].gameboard, row, column));
                                 drawShipSunk(playersArr, row, column, turn);
                             }
-                            console.log(coordinatesToTravel.length);
+                            if (playersArr[gameSpace.turn ? 0 : 1].gameboard.areShipsLeft() === false) {
+                                disableEventListeners(clickedEventFunction);
+                                endGame(gameSpace.turn, playersArr, numberOfShips);
+                            }
                         }
-                    }, 150 * (coordinatesToTravel.length + 1));
-                } else
-                    continue;
-                break;
+                    }, programmableDelay * (coordinatesToTravel.length + 1));
+                }
             }
-        }, 1000);
-        if (playersArr[gameSpace.turn ? 0 : 1].gameboard.areShipsLeft() === false) {
-            disableEventListeners();
-            endGame(gameSpace.turn, playersArr, numberOfShips);
-        }
+        }, 100);
     }
 }
 
@@ -549,12 +505,6 @@ function registerHit(playersArr, turn, row, column, cell, player) {
     return shipWasHit;
 }
 
-function checkValidPosition(playersArr, turn, row, column) {
-    if (playersArr[turn].gameboard.positionsVisited[row][column] === undefined)
-        return true
-    else
-        return false
-}
 
 function colorPlayerShips(shipPositions, i) {
     if (i === 1)
