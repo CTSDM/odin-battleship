@@ -81,6 +81,6 @@ function setUpInputPlayerName(inputSubmit) {
 }
 
 function setPlayerName(name) {
-    const divName = document.getElementById('player-name');
+    const divName = document.querySelector('.players-name');
     divName.textContent = name;
 }
