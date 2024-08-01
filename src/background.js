@@ -60,7 +60,7 @@ export default function backgroundWaves() {
                 ~ ~ ~ ~ ~ ~ ~ ~`
         ];
         const waveSpan = document.querySelector('.ocean > span');
-        setInterval(() => {
+        setInterval(function() {
                 waveSpan.innerHTML = stateValues[state];
                 state = 1 - state;
         }, 250);

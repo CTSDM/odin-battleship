@@ -25,12 +25,10 @@ function setUpFunctionality(numberOfShips, size) {
 
 function disableButtons(flagDisable, flagLastButton = false) {
     const shipButtons = [...document.querySelector('.ship-selection').children];
-    shipButtons.forEach((button, index) => {
-        if (flagLastButton)
-            if (index === shipButtons.length - 1)
-                return
-        button.disabled = flagDisable;
-    });
+    for (let i = 0; i < shipButtons.length; ++i)
+        shipButtons[i].disable = flagDisable;
+    if (flagLastButton)
+        shipButtons[shipButtons.length - 1] = true;
 }
 
 function randomPositionStart(playersArr, numberOfShips) {
@@ -61,7 +59,7 @@ function placeShipsGameboard(player, playerIndex, nShips) {
 
 function setUpDivShips() {
     const shipContainer = [...document.querySelector('.ships-images').children];
-    [...shipContainer].forEach((image) => {
+    shipContainer.forEach((image) => {
         image.src = IMAGES_SHIPS;
     });
     enableDivShips();
@@ -70,10 +68,15 @@ function setUpDivShips() {
 
 function enableDivShips() {
     const shipContainer = [...document.querySelector('.ships-images').children];
-    [...shipContainer].forEach((image, index) => {
+    shipContainer.forEach((image, index) => {
         restartImagePosition(image);
         restartSizeImage(image, index);
     });
+}
+
+function disableDivShips() {
+    const shipContainer = [...document.querySelector('.ships-images').children];
+    shipContainer.forEach((image) => restartSizeImage(image, 0, 0));
 }
 
 function restartImagePosition(image) {
@@ -83,10 +86,10 @@ function restartImagePosition(image) {
     image.style.transform = 'rotate(0deg)';
 }
 
-function restartSizeImage(image, index) {
-    const width = 100 + 50 * index;
-    image.style.width = `${width}px`;
-    image.style.height = '50px';
+function restartSizeImage(image, index, flagWidth = 1) {
+    const width = 100 * flagWidth + 50 * index;
+    image.style.width = `${width * flagWidth}px`;
+    image.style.height = `${50 * flagWidth}px`;
 }
 
 function setUpEventListenersShips(playersArr) {
@@ -151,14 +154,6 @@ function setUpEventListenersShips(playersArr) {
                 restartImagePosition(shipContainer[indexShip]);
             indexShip = -1;
         }
-    });
-}
-
-function disableDivShips() {
-    const shipContainer = [...document.querySelector('.ships-images').children];
-    [...shipContainer].forEach((image) => {
-        image.style.width = '0px';
-        image.style.height = '0px';
     });
 }
 
@@ -232,7 +227,6 @@ function loadGrid(size) {
     });
 }
 
-
 function startGame(players, computer, nShips) {
     const startGameButton = document.getElementById('start-game');
     startGameButton.textContent = 'Start game!';
@@ -249,20 +243,21 @@ function removeAllButtons() {
 }
 
 function highlightAxis(cellIni, flagEnable = true) {
-    const board = cellIni.parentElement;
-    const boardArray = [...board.children];
-    const row = cellIni.dataset.row;
-    const column = cellIni.dataset.column;
-    boardArray.forEach((cell) => {
-        if (cell.dataset.row === row || cell.dataset.column === column) {
-            if (flagEnable) {
-                if (cell.classList.contains('hit') === false && cell.classList.contains('no-hit') === false)
-                    cell.classList.add('highlight-target');
-            }
-            else {
-                cell.classList.remove('highlight-target');
-            }
-        }
+    const boardArray = [...cellIni.parentElement.children];
+    const row = +cellIni.dataset.row, column = +cellIni.dataset.column;
+    const size = Math.sqrt(boardArray.length);
+    const arrayIndex = [];
+    for (let i = 0; i < size; ++i) {
+        arrayIndex.push(row * size + i);
+        arrayIndex.push(column + i * size);
+    }
+    arrayIndex.forEach((index) => {
+        const cell = boardArray[index];
+        if (flagEnable) {
+            if (cell.classList.contains('hit') === false && cell.classList.contains('no-hit') === false)
+                cell.classList.add('highlight-target');
+        } else
+            cell.classList.remove('highlight-target');
     });
 }
 
@@ -278,12 +273,8 @@ function drawShipSunk(playersArr, row, column, turn) {
     const indexOpponent = turn ? 0 : 1;
     const gameboardArrOpponent = [...gameboardDivOpponent[indexOpponent].children];
     shipSunkCoordinates.forEach((coordinate) => {
-        gameboardArrOpponent.forEach((cell) => {
-            if (+cell.dataset.row === coordinate[0] && +cell.dataset.column === coordinate[1]) {
-                cell.classList.add('sunk');
-                return
-            }
-        });
+        const cell = gameboardArrOpponent[coordinate[1] + coordinate[0] * Math.sqrt(gameboardArrOpponent.length)];
+        cell.classList.add('sunk');
     });
 }
 
@@ -386,7 +377,7 @@ function computerTurn(flagComputer, gameSpace, playersArr, gameRecord, divBoardC
         const size = getBoardSize(playersArr[0]);
         gameSpace.computerIsPlaying = true;
         enableComputerThinkingDiv(true);
-        const programmableDelay = 10;
+        const programmableDelay = 50;
         let validPosition = false;
         setTimeout(function() {
             while (validPosition === false) {
@@ -431,14 +422,10 @@ function computerTurn(flagComputer, gameSpace, playersArr, gameRecord, divBoardC
 
 function enableComputerThinkingDiv(flag) {
     const divSeparators = [...document.querySelectorAll('.separator')];
-    divSeparators.forEach((div, index) => {
-        if (flag) {
-            if (index !== 0)
-                div.textContent = 'COMPUTER is THINKING';
-        } else {
-            div.textContent = '';
-        }
-    });
+    if (flag)
+        divSeparators[1].textContent = 'Computer is THINKING';
+    else
+        divSeparators[1].textContent = '';
 }
 
 function endGame(turn, playersArr, numberOfShips) {
@@ -467,6 +454,7 @@ function setUpPlayButtons(players, nShips) {
     randomPositionStart(players, nShips);
     setUpManualPosition(players, nShips);
     startGame(players, true, nShips);
+    disableStartButton(true);
 }
 
 function createPlayButtons(container) {
@@ -504,7 +492,6 @@ function registerHit(playersArr, turn, row, column, cell, player) {
     }
     return shipWasHit;
 }
-
 
 function colorPlayerShips(shipPositions, i) {
     if (i === 1)

@@ -140,10 +140,8 @@ export function getRandomCoordinates(nShips, size) {
 }
 
 export function computerPlays(size, computerPlayRecord, isRandom) {
-    console.log(isRandom);
-    if (isRandom) {
+    if (isRandom)
         return computerPlaysRandom(size);
-    }
     if (computerPlayRecord.searching === false) {
         if (computerPlayRecord.nonSunkShipsHitPosition.length > 0)
             return getNearbyCoordinatesOld(size, computerPlayRecord);
@@ -186,7 +184,6 @@ function getNearbyCoordinatesOld(size, computerRecord) {
 }
 
 function getNearbyCoordinates(size, computerRecord) {
-    console.log('hmmm');
     // let's go from top to botton  in counter clock wise direction
     const possiblePos = [[-1, 0], [0, -1], [1, 0], [0, 1]];
     const previousMoves = computerRecord.moves;
