@@ -15,6 +15,14 @@ body {
     justify-items: center;
     width: max-content;
     margin: auto;
+    transform: scale(0);
+    opacity: 0;
+}
+
+.scaling {
+    transform: scale(1);
+    opacity: 1;
+    transition: all ease-in-out 1s;
 }
 
 .ocean {
@@ -115,4 +123,11 @@ body {
 
 .selected-axis {
     background-color: magenta;
+}
+
+.game-title {
+    font-size: 50px;
+    font-weight: 900;
+    text-align: center;
+    transition: all ease-in-out 1s;
 }

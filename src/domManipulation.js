@@ -11,6 +11,12 @@ export default function createBoard(size, numberOfShips) {
     setUpPlayerName(disableButtons);
     setUpFunctionality(numberOfShips, size);
     disableButtons(true);
+    makeBoardDivVisible();
+}
+
+function makeBoardDivVisible() {
+    const boardContainer = document.querySelector('.players-container');
+    setTimeout(() => boardContainer.classList.add('scaling'), 100);
 }
 
 function setUpFunctionality(numberOfShips, size) {
