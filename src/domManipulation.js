@@ -405,6 +405,7 @@ function computerTurn(flagComputer, gameSpace, playersArr, gameRecord, divBoardC
                         if (registerHit(playersArr, turn, row, column, cell, gameRecord[turn])) {
                             gameRecord[turn].nonSunkShipsHitPosition.push([row, column]);
                             if (isShipSunk(playersArr[turn].gameboard, row, column)) {
+                                gameRecord[turn].lastHitIndex = -1;
                                 gameRecord[turn].removeSunkShip(getSunkShipPositions(playersArr[turn].gameboard, row, column));
                                 drawShipSunk(playersArr, row, column, turn);
                             }
