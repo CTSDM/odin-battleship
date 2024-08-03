@@ -10,7 +10,6 @@ export default function createBoard(size, numberOfShips) {
     loadGrid(size);
     setUpPlayerName(disableButtons);
     setUpFunctionality(numberOfShips, size);
-    disableButtons(true);
     makeBoardDivVisible();
 }
 
@@ -23,7 +22,7 @@ function setUpFunctionality(numberOfShips, size) {
     const playersArr = [];
     createPlayers(playersArr, size);
     randomPositionStart(playersArr, numberOfShips);
-    setUpManualPosition(playersArr, numberOfShips);
+    setUpManualPosition(playersArr, numberOfShips, true);
     createDivShips(numberOfShips);
     setUpEventListenersShips(playersArr);
     startGame(playersArr, true, numberOfShips);
@@ -32,9 +31,9 @@ function setUpFunctionality(numberOfShips, size) {
 function disableButtons(flagDisable, flagLastButton = false) {
     const shipButtons = [...document.querySelector('.ship-selection').children];
     for (let i = 0; i < shipButtons.length; ++i)
-        shipButtons[i].disable = flagDisable;
+        shipButtons[i].disabled = flagDisable;
     if (flagLastButton)
-        shipButtons[shipButtons.length - 1] = true;
+        shipButtons[shipButtons.length - 1].disabled = true;
 }
 
 function randomPositionStart(playersArr, numberOfShips) {
@@ -168,12 +167,14 @@ function disableStartButton(flagEnable) {
     button.disabled = flagEnable;
 }
 
-function setUpManualPosition(playersArr, nShips) {
+function setUpManualPosition(playersArr, nShips, disabledManual = false) {
     const buttonPrev = document.getElementById('manual-placement');
     const manualButton = document.createElement('button');
     manualButton.id = 'manual-placement';
     manualButton.textContent = 'Manual placement of the ship';
     manualButton.type = 'button';
+    if (disabledManual)
+        manualButton.disabled = true;
     manualButton.addEventListener('click', () => {
         restartPlayersGrid(playersArr);
         restartManualShipPlacement(manualButton, playersArr, nShips);
