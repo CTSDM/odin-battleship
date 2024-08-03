@@ -259,10 +259,9 @@ function highlightAxis(cellIni, flagEnable = true) {
     }
     arrayIndex.forEach((index) => {
         const cell = boardArray[index];
-        if (flagEnable) {
-            if (cell.classList.contains('hit') === false && cell.classList.contains('no-hit') === false)
-                cell.classList.add('highlight-target');
-        } else
+        if (flagEnable)
+            cell.classList.add('highlight-target');
+        else
             cell.classList.remove('highlight-target');
     });
 }
@@ -436,13 +435,25 @@ function enableComputerThinkingDiv(flag) {
 }
 
 function endGame(turn, playersArr, numberOfShips) {
-    console.log(turn);
-    console.log('end game!');
-    console.log(`player ${turn ? 0 : 1} won!`);
-    setUpReplayGame(playersArr, numberOfShips);
+    setUpReplayGame(playersArr, numberOfShips, getWinnerDiv(1 - turn));
 }
 
-function setUpReplayGame(playersArr, numberOfShips) {
+function getWinnerDiv(winnerIndex) {
+    const divWinner = document.createElement('div');
+    const spanName = document.createElement('span');
+    const spanArray = [document.createElement('span'), document.createElement('span')];
+    const winnerName = [...document.querySelectorAll('.players-name')][winnerIndex].textContent;
+    divWinner.classList.add('winner');
+    spanName.textContent = `${winnerName} `;
+    spanArray[0].textContent = 'Player ';
+    spanArray[1].textContent = 'gets the competition!';
+    divWinner.appendChild(spanArray[0]);
+    divWinner.appendChild(spanName);
+    divWinner.appendChild(spanArray[1]);
+    return divWinner;
+}
+
+function setUpReplayGame(playersArr, numberOfShips, winnerDiv) {
     const divShips = document.querySelector('.ship-selection');
     const replayButton = document.createElement('button');
     replayButton.textContent = 'Play again';
@@ -450,7 +461,9 @@ function setUpReplayGame(playersArr, numberOfShips) {
     replayButton.addEventListener('click', () => {
         setUpPlayButtons(playersArr, numberOfShips);
         replayButton.remove();
+        winnerDiv.remove();
     });
+    divShips.appendChild(winnerDiv);
     divShips.appendChild(replayButton);
 }
 

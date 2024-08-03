@@ -109,8 +109,7 @@ body {
 }
 
 .highlight-target {
-    background-color: blue;
-    opacity: 0.3;
+    border-color: blue;
 }
 
 .sunk {
@@ -130,4 +129,15 @@ body {
     font-weight: 900;
     text-align: center;
     transition: all ease-in-out 1s;
+}
+
+.winner {
+    font-size: 20px;
+    transition: all 1s;
+}
+
+.winner span:nth-child(2) {
+    font-weight: 900;
+    color: blue;
+    font-style: italic;
 }
