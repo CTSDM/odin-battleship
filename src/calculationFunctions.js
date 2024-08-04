@@ -149,13 +149,13 @@ export function computerPlays(size, computerPlayRecord, isRandom) {
             return computerPlaysRandom(size);
     }
     else {
-        if (computerPlayRecord.lastHitIndex === -1)
-            return computerPlaysRandom(size);
         const newCords = getNearbyCoordinates(size, computerPlayRecord);
-        if (newCords === -1)
-            return computerPlaysRandom(size);
-        else
+        if (newCords !== -1)
             return newCords;
+        else if (computerPlayRecord.nonSunkShipsHitPosition.length > 0)
+            return getNearbyCoordinatesOld(size, computerPlayRecord);
+        else
+            return computerPlaysRandom(size);
     }
 }
 
