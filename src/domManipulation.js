@@ -28,6 +28,18 @@ function setUpFunctionality(numberOfShips, size) {
     startGame(playersArr, true, numberOfShips);
 }
 
+function changeGameTitle(state) {
+    const spanTitle = document.querySelector('.game-title span');
+    if (state === 0)
+        spanTitle.textContent = '<WELCOME>';
+    else if (state === 1)
+        spanTitle.textContent = 'FIGHT!!!!';
+    else if (state === 2)
+        spanTitle.textContent = 'You win!';
+    else if (state === 3)
+        spanTitle.textContent = 'Game Over!';
+}
+
 function disableButtons(flagDisable, flagLastButton = false) {
     const shipButtons = [...document.querySelector('.ship-selection').children];
     for (let i = 0; i < shipButtons.length; ++i)
@@ -238,6 +250,7 @@ function startGame(players, computer, nShips) {
     const startGameButton = document.getElementById('start-game');
     startGameButton.textContent = 'Start game!';
     startGameButton.addEventListener('click', () => {
+        changeGameTitle(1);
         createEvents(players, computer, nShips);
         removeAllButtons();
     });
@@ -343,7 +356,7 @@ function handleHit(playersArr, gameSpace, row, column, e, gameRecord, divBoardCh
     gameSpace.turn = 1;
     if (playersArr[0].gameboard.areShipsLeft() === false) {
         disableEventListeners(clickedEventFunction);
-        endGame(gameSpace.turn, playersArr, numberOfShips);
+        endGame(gameSpace.turn, playersArr, numberOfShips, true);
     } else
         computerTurn(flagComputer, gameSpace, playersArr, gameRecord, divBoardChildrenArray, numberOfShips, clickedEventFunction);
 }
@@ -417,7 +430,7 @@ function computerTurn(flagComputer, gameSpace, playersArr, gameRecord, divBoardC
                             }
                             if (playersArr[gameSpace.turn ? 0 : 1].gameboard.areShipsLeft() === false) {
                                 disableEventListeners(clickedEventFunction);
-                                endGame(gameSpace.turn, playersArr, numberOfShips);
+                                endGame(gameSpace.turn, playersArr, numberOfShips, false);
                             }
                         }
                     }, programmableDelay * (coordinatesToTravel.length + 1));
@@ -435,8 +448,9 @@ function enableComputerThinkingDiv(flag) {
         divSeparators[1].textContent = '';
 }
 
-function endGame(turn, playersArr, numberOfShips) {
-    setUpReplayGame(playersArr, numberOfShips, getWinnerDiv(1 - turn));
+function endGame(turn, playersArr, numberOfShips, flagUserWin) {
+    changeGameTitle(flagUserWin ? 2 : 3);
+    setUpReplayGame(playersArr, numberOfShips, getWinnerDiv(1 - turn), flagUserWin);
 }
 
 function getWinnerDiv(winnerIndex) {
@@ -460,6 +474,7 @@ function setUpReplayGame(playersArr, numberOfShips, winnerDiv) {
     replayButton.textContent = 'Play again';
     replayButton.type = 'button';
     replayButton.addEventListener('click', () => {
+        changeGameTitle(0);
         setUpPlayButtons(playersArr, numberOfShips);
         replayButton.remove();
         winnerDiv.remove();

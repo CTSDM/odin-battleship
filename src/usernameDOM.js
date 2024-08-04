@@ -34,9 +34,13 @@ function formEvent(e, callback) {
         setPlayerName(playerName);
         parentElement.remove();
         callback(false, true);
+        changeGameTitle(0);
     } else {
         showErrorMessageInput(form);
     }
+}
+
+export function changeGameTitle(state) {
 }
 
 function isValidInput(name) {
