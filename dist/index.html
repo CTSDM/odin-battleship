@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <title>Battleship game</title>
+<script defer src="bundle.js"></script></head>
+
+<body>
+    <div class="game-title">
+        BATTLESHIP, THE GAME!!
+        </br>
+        <span> &lt;WELCOME&gt;</span>
+    </div>
+    <div class="players-container">
+        <div class="board player1">
+
+        </div>
+        <div class="separator ocean">
+            <span>
+                &nbsp; ~ ~ ~ ~ ~ ~ ~
+                ~ ~ ~ ~ ~ ~ ~ ~
+                &nbsp; ~ ~ ~ ~ ~ ~ ~
+                ~ ~ ~ ~ ~ ~ ~ ~
+                &nbsp; ~ ~ ~ ~ ~ ~ ~
+                ~ ~ ~ ~ ~ ~ ~ ~
+                &nbsp; ~ ~ ~ ~ ~ ~ ~
+                ~ ~ ~ ~ ~ ~ ~ ~
+                &nbsp; ~ ~ ~ ~ ~ ~ ~
+                ~ ~ ~ ~ ~ ~ ~ ~
+                &nbsp; ~ ~ ~ ~ ~ ~ ~
+                ~ ~ ~ ~ ~ ~ ~ ~
+                &nbsp; ~ ~ ~ ~ ~ ~ ~
+                ~ ~ ~ ~ ~ ~ ~ ~
+                &nbsp; ~ ~ ~ ~ ~ ~ ~
+                ~ ~ ~ ~ ~ ~ ~ ~
+                &nbsp; ~ ~ ~ ~ ~ ~ ~
+                ~ ~ ~ ~ ~ ~ ~ ~
+                &nbsp; ~ ~ ~ ~ ~ ~ ~
+                ~ ~ ~ ~ ~ ~ ~ ~
+                &nbsp; ~ ~ ~ ~ ~ ~ ~
+                ~ ~ ~ ~ ~ ~ ~ ~
+                &nbsp; ~ ~ ~ ~ ~ ~ ~
+                ~ ~ ~ ~ ~ ~ ~ ~
+                &nbsp; ~ ~ ~ ~ ~ ~ ~
+                ~ ~ ~ ~ ~ ~ ~ ~
+                &nbsp; ~ ~ ~ ~ ~ ~ ~
+                ~ ~ ~ ~ ~ ~ ~ ~
+            </span>
+        </div>
+        <div class="board player2">
+
+        </div>
+        <div class="players-name">
+            Human player
+        </div>
+        <div class="separator">
+            <!-- This div was intentionally left blank -->
+        </div>
+        <div class="players-name">
+            COMPUTER
+        </div>
+        <div class="">
+
+        </div>
+    </div>
+    <div class="difficulty">
+        <fieldset>
+            <legend>Choose the difficulty:</legend>
+            <input type="radio" name="difficulty" value="true" id="easy" checked>
+            <label for="easy">&nbsp;Easy</label>
+            <input type="radio" name="difficulty" value="false" id="hard">
+            <label for="hard">&nbsp;Hard</label>
+        </fieldset>
+    </div>
+    <div class="ship-selection">
+        <button id="randomize-placement" type="button" disabled>Randomize ship placement</button>
+        <button id="manual-placement" type="button" disabled>Manual placement of the ship</button>
+        <button id="start-game" type="button" disabled>Start the game!</button>
+    </div>
+</body>
+
+</html>
