@@ -15,7 +15,7 @@ body {
     grid-template-columns: 1fr 100px 1fr;
     justify-items: center;
     width: max-content;
-    margin: auto;
+    margin: 20px auto;
     transform: scale(0);
     opacity: 0;
 }
@@ -61,6 +61,7 @@ body {
     justify-self: center;
     font-size: 1.5rem;
     font-weight: 700;
+    margin-top: 20px;
 }
 
 .hit {
@@ -81,12 +82,14 @@ body {
     display: flex;
     justify-content: center;
     gap: 20px;
+    margin-top: 20px;
 }
 
 .ships-images {
     display: flex;
     gap: 20px;
     justify-content: center;
+    margin-top: 20px;
 }
 
 .error {
@@ -147,4 +150,24 @@ body {
 
 form input::placeholder {
     font-family: monospace;
+}
+
+.difficulty {
+    display: flex;
+    margin-top: 20px;
+    justify-content: center;
+    text-align: center;
+    user-select: none;
+}
+
+.difficulty legend {
+    font-weight: 700;
+}
+
+.difficulty label {
+    margin-left: -8px;
+}
+
+.hidden {
+    display: none;
 }

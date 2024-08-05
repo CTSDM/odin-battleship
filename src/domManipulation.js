@@ -2,7 +2,7 @@ import imageShip1 from "./images/smallShip.png";
 import { shipsLeft, isValidShipPosition, getBoardSize, getNewShipPosition, shipCollision, computerPlays, getRandomCoordinates } from "./calculationFunctions";
 import { addShipToPlayer, createGameRecord, createPlayers } from "./objectsModification";
 import { setUpPlayerName } from "./usernameDOM.js";
-import { getSunkShipPositions, isShipSunk, getLaunchingCoordinates, checkValidPosition } from "./auxFunctions.js";
+import { getSunkShipPositions, isShipSunk, getLaunchingCoordinates, checkValidPosition, getDifficulty } from "./auxFunctions.js";
 
 const IMAGES_SHIPS = imageShip1;
 
@@ -251,12 +251,20 @@ function startGame(players, computer, nShips) {
     startGameButton.textContent = 'Start game!';
     startGameButton.addEventListener('click', () => {
         changeGameTitle(1);
-        createEvents(players, computer, nShips);
+        const gameDifficulty = getDifficulty();
+        modifyComputerText(gameDifficulty);
+        createEvents(players, computer, nShips, gameDifficulty);
         removeAllButtons();
     });
 }
 
+function toggleHidDifficultyDiv() {
+    const divDifficulty = document.querySelector('.difficulty');
+    divDifficulty.classList.toggle('hidden');
+}
+
 function removeAllButtons() {
+    toggleHidDifficultyDiv();
     const buttonsDiv = document.querySelector('.ship-selection');
     while (buttonsDiv.children.length > 0)
         buttonsDiv.children[0].remove();
@@ -314,7 +322,7 @@ function blinkTarget(cellArray, row, column) {
     setTimeout(() => cell.classList.remove('transition-selected-axis'), delay);
 }
 
-function createEvents(playersArr, flagComputer, numberOfShips) {
+function createEvents(playersArr, flagComputer, numberOfShips, isDifficult) {
     const gameRecord = createGameRecord();
     // We associate each player with a board;
     // the function inside the event listener should not be an anonymous function
@@ -335,13 +343,13 @@ function createEvents(playersArr, flagComputer, numberOfShips) {
         const column = +e.target.dataset.column;
         if (gameSpace.computerIsPlaying === false && gameSpace.turn === 0) {
             if (checkValidPosition(playersArr, gameSpace.turn, row, column))
-                handleHit(playersArr, gameSpace, row, column, e, gameRecord, divBoardChildrenArray, numberOfShips, flagComputer, clicked);
+                handleHit(playersArr, gameSpace, row, column, e, gameRecord, divBoardChildrenArray, numberOfShips, flagComputer, clicked, isDifficult);
             cell.removeEventListener('mouseup', clicked);
         }
     }
 }
 
-function handleHit(playersArr, gameSpace, row, column, e, gameRecord, divBoardChildrenArray, numberOfShips, flagComputer, clickedEventFunction) {
+function handleHit(playersArr, gameSpace, row, column, e, gameRecord, divBoardChildrenArray, numberOfShips, flagComputer, clickedEventFunction, isDifficult) {
     // disable highlightAxisEvent
     highlightAxis(divBoardChildrenArray[column + row * Math.sqrt(divBoardChildrenArray.length)], false);
     divBoardChildrenArray.forEach((cell) => {
@@ -358,7 +366,7 @@ function handleHit(playersArr, gameSpace, row, column, e, gameRecord, divBoardCh
         disableEventListeners(clickedEventFunction);
         endGame(gameSpace.turn, playersArr, numberOfShips, true);
     } else
-        computerTurn(flagComputer, gameSpace, playersArr, gameRecord, divBoardChildrenArray, numberOfShips, clickedEventFunction);
+        computerTurn(flagComputer, gameSpace, playersArr, gameRecord, divBoardChildrenArray, numberOfShips, clickedEventFunction, isDifficult);
 }
 
 function disableEventListeners(eventFunction) {
@@ -474,6 +482,8 @@ function setUpReplayGame(playersArr, numberOfShips, winnerDiv) {
     replayButton.textContent = 'Play again';
     replayButton.type = 'button';
     replayButton.addEventListener('click', () => {
+        toggleHidDifficultyDiv();
+        modifyComputerText();
         changeGameTitle(0);
         setUpPlayButtons(playersArr, numberOfShips);
         replayButton.remove();
@@ -538,4 +548,14 @@ function colorPlayerShips(shipPositions, i) {
     shipPositions.forEach((position) => {
         gameBoardPlayer[i].children[position[0] * 10 + position[1]].classList.add('humanPlayer');
     });
+}
+
+function modifyComputerText(isEasy) {
+    const computerNameDiv = [...document.querySelectorAll('.players-name')][1];
+    let textDifficulty;
+    if (isEasy === undefined)
+        textDifficulty = '';
+    else
+        textDifficulty = isEasy ? ' (easy)' : ' (hard)'
+    computerNameDiv.textContent = `COMPUTER${textDifficulty}`;
 }

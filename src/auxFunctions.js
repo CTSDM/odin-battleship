@@ -79,3 +79,10 @@ export function checkValidPosition(playersArr, turn, row, column) {
     else
         return false
 }
+
+export function getDifficulty() {
+    const inputs = [...document.querySelectorAll('input')];
+    if (inputs[1].checked === true)
+        return false;
+    return true;
+}
