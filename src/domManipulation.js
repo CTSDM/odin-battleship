@@ -75,25 +75,34 @@ function placeShipsGameboard(player, playerIndex, nShips) {
 }
 
 function setUpDivShips() {
-    const shipContainer = [...document.querySelector('.ships-images').children];
-    shipContainer.forEach((image) => {
-        image.src = IMAGES_SHIPS;
-    });
+    const imagesElements = [...document.querySelectorAll('img')];
+    imagesElements.forEach((image) => image.src = IMAGES_SHIPS);
     enableDivShips();
     disableDivShips();
 }
 
 function enableDivShips() {
-    const shipContainer = [...document.querySelector('.ships-images').children];
-    shipContainer.forEach((image, index) => {
+    const imagesElements = [...document.querySelectorAll('img')];
+    imagesElements.forEach((image, index) => {
         restartImagePosition(image);
         restartSizeImage(image, index);
     });
+    disableDivShipContainer(false);
+}
+
+function disableDivShipContainer(flag = true) {
+    const individualShipContainers = [...document.querySelectorAll('.ships-images div')];
+    if (flag)
+        individualShipContainers.forEach((div) => div.classList.remove('individual-ship'));
+    else
+        individualShipContainers.forEach((div) => div.classList.add('individual-ship'));
+
 }
 
 function disableDivShips() {
-    const shipContainer = [...document.querySelector('.ships-images').children];
-    shipContainer.forEach((image) => restartSizeImage(image, 0, 0));
+    const imagesElements = [...document.querySelectorAll('img')];
+    imagesElements.forEach((image) => restartSizeImage(image, 0, 0));
+    disableDivShipContainer(true);
 }
 
 function restartImagePosition(image) {
@@ -113,8 +122,8 @@ function setUpEventListenersShips(playersArr) {
     let activation = false;
     let indexShip = -1;
     const initialClickPosition = [];
-    const shipContainer = [...document.querySelector('.ships-images').children];
-    [...shipContainer].forEach((image, index) => {
+    const imagesElements = [...document.querySelectorAll('img')];
+    imagesElements.forEach((image, index) => {
         image.addEventListener('mousedown', (eMouse) => {
             activation = true;
             indexShip = index;
@@ -127,7 +136,7 @@ function setUpEventListenersShips(playersArr) {
         if (eKey.code === 'KeyR') {
             let newRotationValue;
             if (indexShip !== -1) {
-                const image = [...shipContainer][indexShip];
+                const image = imagesElements[indexShip];
                 if (image.style.transform !== 'rotate(90deg)')
                     newRotationValue = 90;
                 else
@@ -139,36 +148,37 @@ function setUpEventListenersShips(playersArr) {
 
     document.addEventListener('mousemove', (e) => {
         if (activation && indexShip !== -1) {
-            shipContainer[indexShip].style.position = 'relative';
-            shipContainer[indexShip].style.left = `${e.clientX - initialClickPosition[0]}px`;
-            shipContainer[indexShip].style.top = `${e.clientY - initialClickPosition[1]}px`;
+            imagesElements[indexShip].style.position = 'relative';
+            imagesElements[indexShip].style.left = `${e.clientX - initialClickPosition[0]}px`;
+            imagesElements[indexShip].style.top = `${e.clientY - initialClickPosition[1]}px`;
         }
     });
 
     document.addEventListener('mouseup', () => {
         if (indexShip !== -1) {
             const boardPlayer1Coord = document.querySelector('.player1').getBoundingClientRect();
-            if (isValidShipPosition(shipContainer[indexShip], boardPlayer1Coord)) {
+            if (isValidShipPosition(imagesElements[indexShip], boardPlayer1Coord)) {
                 // let's place the ship
                 // once i know the ship position is valid i can calculate the index where the ship can be placed
                 // in this position is should check if there are ships on the to positions where the new ship can be placed
-                const positions = getNewShipPosition(shipContainer[indexShip], boardPlayer1Coord);
+                const positions = getNewShipPosition(imagesElements[indexShip], boardPlayer1Coord);
                 if (!shipCollision(playersArr[1], positions)) {
                     addShipToPlayer(playersArr[1], positions);
                     colorPlayerShips(positions, 1);
                     // place the ship within the gameboard
                     // delete the image that is associated to the placed ship
-                    shipContainer[indexShip].style.width = 0;
-                    shipContainer[indexShip].style.height = 0;
+                    imagesElements[indexShip].style.width = 0;
+                    imagesElements[indexShip].style.height = 0;
+                    imagesElements[indexShip].parentElement.classList.remove('individual-ship');
                     // the condition below  means that all the ships have been placed correctly
-                    if (shipsLeft(shipContainer)) {
-                        placeShipsGameboard(playersArr[0], 0, shipContainer.length);
+                    if (shipsLeft(imagesElements)) {
+                        placeShipsGameboard(playersArr[0], 0, imagesElements.length);
                         disableStartButton(false);
                     }
                 } else
-                    restartImagePosition(shipContainer[indexShip]);
+                    restartImagePosition(imagesElements[indexShip]);
             } else
-                restartImagePosition(shipContainer[indexShip]);
+                restartImagePosition(imagesElements[indexShip]);
             indexShip = -1;
         }
     });
@@ -215,10 +225,12 @@ function createDivShips(nShips) {
     const divShips = document.createElement('div');
     divShips.classList.add('ships-images');
     for (let i = 0; i < nShips; ++i) {
+        const divIndividualContainer = document.createElement('div');
         const img = document.createElement('img');
         img.draggable = false;
         img.alt = `Ship of length ${i + 2}`;
-        divShips.appendChild(img);
+        divIndividualContainer.appendChild(img);
+        divShips.appendChild(divIndividualContainer);
     }
     document.body.appendChild(divShips);
     setUpDivShips();
@@ -540,10 +552,7 @@ function registerHit(playersArr, turn, row, column, cell, player) {
 }
 
 function colorPlayerShips(shipPositions, i) {
-    if (i === 1)
-        i = 0;
-    else
-        i = 1;
+    i = i === 0 ? 1 : 0
     const gameBoardPlayer = document.querySelectorAll('div.board');
     shipPositions.forEach((position) => {
         gameBoardPlayer[i].children[position[0] * 10 + position[1]].classList.add('humanPlayer');
