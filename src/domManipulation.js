@@ -484,11 +484,11 @@ function computerTurn(flagComputer, gameSpace, playersArr, gameRecord, divBoardC
 }
 
 function enableComputerThinkingDiv(flag) {
-    const divSeparators = [...document.querySelectorAll('.separator')];
+    const divThinkingState = document.querySelector('.computer-state-movement');
     if (flag)
-        divSeparators[1].textContent = 'Computer is THINKING';
+        divThinkingState.textContent = 'Computer is THINKING';
     else
-        divSeparators[1].textContent = '';
+        divThinkingState.textContent = '';
 }
 
 function endGame(turn, playersArr, numberOfShips, flagUserWin) {
