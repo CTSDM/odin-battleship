@@ -5,6 +5,7 @@
   "private": "true",
   "main": "index.js",
   "scripts": {
+    "publish-github": "git subtree push --prefix dist origin gh-pages",
     "test": "jest",
     "watch": "webpack --watch",
     "start": "webpack serve --open",
