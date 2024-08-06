@@ -13,7 +13,6 @@ body {
 .players-container {
     display: grid;
     grid-template-columns: 1fr 100px 1fr;
-    justify-items: center;
     width: max-content;
     margin: 20px auto;
     transform: scale(0);
@@ -29,9 +28,12 @@ body {
 .ocean {
     font-weight: 900;
     background-color: #4F42B5;
-    width: 100%;
     user-select: none;
     font-family: serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    padding: 0 2px;
 }
 
 .board {
@@ -165,7 +167,7 @@ form input::placeholder {
 }
 
 .difficulty label {
-    margin-left: -8px;
+    margin-left: -10px;
 }
 
 .hidden {
@@ -177,4 +179,10 @@ form input::placeholder {
     align-items: center;
     border: 2px blue solid;
     background: lightcyan;
+}
+
+.info {
+    margin-top: 5px;
+    text-align: center;
+    font-size: 1.4rem;
 }

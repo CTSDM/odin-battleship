@@ -60,7 +60,13 @@ function randomPositionStart(playersArr, numberOfShips) {
         // we enable the button of starting the game
         disableDivShips();
         disableStartButton(false);
+        removeInformationPlacement();
     });
+}
+
+function removeInformationPlacement() {
+    if (document.body.lastChild.classList.contains('info'))
+        document.body.removeChild(document.body.lastChild);
 }
 
 function placeShipsGameboard(player, playerIndex, nShips) {
@@ -174,6 +180,7 @@ function setUpEventListenersShips(playersArr) {
                     if (shipsLeft(imagesElements)) {
                         placeShipsGameboard(playersArr[0], 0, imagesElements.length);
                         disableStartButton(false);
+                        removeInformationPlacement();
                     }
                 } else
                     restartImagePosition(imagesElements[indexShip]);
@@ -203,9 +210,24 @@ function setUpManualPosition(playersArr, nShips, disabledManual = false) {
         manualButton.remove();
         disableStartButton(true);
         enableDivShips();
+        showInstructionsManual();
     });
     buttonPrev.insertAdjacentElement('beforebegin', manualButton);
     buttonPrev.remove();
+}
+
+function showInstructionsManual() {
+    if (document.body.lastChild.classList.contains('info') === false) {
+        const divInfo = document.createElement('div');
+        const divInfoDrag = document.createElement('div');
+        const divInfoRotation = document.createElement('div');
+        divInfoDrag.textContent = 'Click and drag to place the ship into the battlefield!';
+        divInfoRotation.textContent = 'While dragging the ship, you can press "R" to rotate it 90 degrees.';
+        divInfo.appendChild(divInfoDrag);
+        divInfo.appendChild(divInfoRotation);
+        divInfo.classList.add('info');
+        document.body.append(divInfo);
+    }
 }
 
 function restartManualShipPlacement(manualPositionButton, playersArr) {
@@ -214,6 +236,7 @@ function restartManualShipPlacement(manualPositionButton, playersArr) {
     buttonRestart.type = 'button';
     buttonRestart.id = 'manual-placement';
     buttonRestart.addEventListener('click', () => {
+        showInstructionsManual();
         disableStartButton(true);
         restartPlayersGrid(playersArr);
         enableDivShips();
