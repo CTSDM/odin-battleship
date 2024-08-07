@@ -336,6 +336,7 @@ function drawShipSunk(playersArr, row, column, turn) {
     const gameboardArrOpponent = [...gameboardDivOpponent[indexOpponent].children];
     shipSunkCoordinates.forEach((coordinate) => {
         const cell = gameboardArrOpponent[coordinate[1] + coordinate[0] * Math.sqrt(gameboardArrOpponent.length)];
+        cell.textContent = 'x';
         cell.classList.add('sunk');
     });
 }
@@ -559,6 +560,7 @@ function registerHit(playersArr, turn, row, column, cell, player) {
     if (playersArr[turn].gameboard.positionsVisited[row][column] === true) {
         shipWasHit = true;
         cell.classList.add('hit');
+        cell.classList.remove('humanPlayer');
         cell.classList.remove('highlight-target');
         player.hits.push(true);
         if (turn === 1) {
